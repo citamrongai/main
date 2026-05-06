@@ -28,7 +28,27 @@ const USERS = [
     name:     "Nicknol Ooma",
     role:     "Projection Operator"
   },
+   
+  {
+     username: "Amos",
+     password: "amos2024",
+     name:     "Amos Kiprotich",
+     role:     "Department Leader"
+      
+  },
+   {
+      username: "King",
+      password: "berur2024",
+      name:     "Ryan Berur",
+      role:     "Developer"
+   },
 
+   {
+      username: "Tinashe",
+      password: "tinashe-supports-a-looser/loser-team😂",
+      name:     "Tinashe Shikali",
+      role:     "Camera Lady😂"
+   }
   /* ── Add more users below this line ─────────────
   {
     username: "mary",
