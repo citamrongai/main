@@ -45,7 +45,7 @@ const USERS = [
 
    {
       username: "Tinashe",
-      password: "tinashe-supports-a-looser/loser-team😂",
+      password: "Tinashe-supports-a-looser/loser-team😂",
       name:     "Tinashe Shikali",
       role:     "Camera Lady😂"
    }
