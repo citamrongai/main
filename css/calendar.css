@@ -1,0 +1,50 @@
+/* calendar.css — Booking Calendar tab — Black & White theme */
+
+.calendar-layout { display: grid; grid-template-columns: 380px 1fr; gap: 24px; align-items: start; }
+
+.cal-card { background: var(--black-3); border: 1px solid var(--border); padding: 24px; }
+.cal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+.cal-nav { background: none; border: 1px solid var(--border); color: var(--text-muted); width: 30px; height: 30px; cursor: pointer; font-size: 14px; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
+.cal-nav:hover { border-color: var(--accent); color: var(--accent); }
+.cal-month { font-family: var(--font-display); font-size: 20px; letter-spacing: 4px; color: var(--text); }
+
+.cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+.cal-day-name { font-size: 10px; letter-spacing: 2px; color: var(--text-muted); text-align: center; padding: 4px 0; text-transform: uppercase; }
+.cal-day { aspect-ratio: 1; display: flex; align-items: center; justify-content: center; font-size: 13px; cursor: pointer; border: 1px solid transparent; transition: all 0.15s; font-family: var(--font-body); font-weight: 500; position: relative; }
+.cal-day:hover:not(.empty):not(.past) { border-color: var(--border-bright); background: rgba(255,255,255,0.05); }
+.cal-day.today { color: var(--accent); font-weight: 700; }
+.cal-day.selected { background: var(--accent); color: var(--black); border-color: var(--accent); font-weight: 700; }
+.cal-day.past { color: var(--gray-2); cursor: not-allowed; }
+.cal-day.empty { cursor: default; }
+.cal-day.has-booking::after { content: ''; position: absolute; bottom: 3px; left: 50%; transform: translateX(-50%); width: 4px; height: 4px; background: var(--accent); border-radius: 50%; }
+.cal-day.selected.has-booking::after { background: var(--black); }
+
+.booking-form { background: var(--black-3); border: 1px solid var(--border); padding: 28px; }
+.form-row { margin-bottom: 18px; }
+.form-row label { display: block; font-size: 11px; letter-spacing: 3px; color: var(--text-muted); margin-bottom: 8px; text-transform: uppercase; }
+
+.docket-pills { display: flex; flex-wrap: wrap; gap: 8px; }
+.docket-pill { background: var(--black-4); border: 1px solid var(--border); color: var(--text-muted); font-family: var(--font-body); font-size: 12px; letter-spacing: 2px; padding: 7px 14px; cursor: pointer; text-transform: uppercase; transition: all 0.2s; }
+.docket-pill:hover { border-color: var(--border-bright); color: var(--text); }
+.docket-pill.selected-pill { background: rgba(255,255,255,0.1); border-color: var(--accent); color: var(--accent); }
+
+.date-info-bar { background: rgba(255,255,255,0.04); border: 1px solid var(--border); border-left: 3px solid var(--accent); padding: 12px 16px; margin-bottom: 20px; font-size: 13px; letter-spacing: 2px; color: var(--text-muted); }
+.date-info-bar strong { color: var(--text); font-weight: 600; }
+
+.no-date-msg { text-align: center; color: var(--text-muted); font-size: 13px; letter-spacing: 2px; padding: 40px 0; line-height: 2; }
+.empty-bookings { text-align: center; padding: 30px; color: var(--text-muted); font-size: 12px; letter-spacing: 2px; border: 1px dashed var(--border); }
+
+.booking-item { background: var(--black-4); border: 1px solid var(--border); border-left: 3px solid var(--accent); padding: 14px 16px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; animation: fadeUp 0.3s ease; }
+.booking-info h4 { font-family: var(--font-body); font-size: 15px; font-weight: 600; color: var(--text); letter-spacing: 1px; }
+.booking-info p { font-size: 12px; color: var(--text-muted); letter-spacing: 1px; margin-top: 2px; }
+.booking-meta { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
+.booking-date { font-family: var(--font-mono); font-size: 12px; color: var(--accent-dim); letter-spacing: 1px; }
+.docket-badge { font-size: 10px; letter-spacing: 2px; color: var(--text-muted); border: 1px solid var(--border-bright); padding: 2px 8px; text-transform: uppercase; }
+.btn-delete { background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 16px; padding: 4px 8px; transition: color 0.2s; margin-left: 12px; flex-shrink: 0; }
+.btn-delete:hover { color: #ff6b6b; }
+
+.btn-book { width: 100%; background: var(--accent); border: none; color: var(--black); font-family: var(--font-display); font-size: 18px; letter-spacing: 4px; padding: 14px; cursor: pointer; margin-top: 8px; transition: opacity 0.2s; }
+.btn-book:hover { opacity: 0.88; }
+.btn-book:disabled { background: var(--gray); color: var(--text-muted); cursor: not-allowed; }
+
+@media (max-width: 900px) { .calendar-layout { grid-template-columns: 1fr; } }

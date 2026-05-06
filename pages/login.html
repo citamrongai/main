@@ -1,0 +1,56 @@
+<!--
+  pages/login.html
+  Login page markup — included inside index.html
+  ================================================
+
+  This file contains only the login overlay markup.
+  Styles live in  css/login.css
+  Logic lives in  js/auth.js + js/users.js
+-->
+
+<div id="login-page">
+  <div class="bg-grid"></div>
+
+  <div class="login-box">
+
+    <!-- Logo -->
+    <div class="logo-mark">
+      <div class="logo-icon">MO</div>
+      <div class="logo-text">
+        <h1>Media Operations</h1>
+        <span>Worship Team Portal</span>
+      </div>
+    </div>
+
+    <div class="login-title">Secure Access</div>
+
+    <!-- Username -->
+    <div class="field">
+      <label for="login-user">Username</label>
+      <input
+        type="text"
+        id="login-user"
+        placeholder="Enter username"
+        autocomplete="off"
+      />
+    </div>
+
+    <!-- Password -->
+    <div class="field">
+      <label for="login-pass">Password</label>
+      <input
+        type="password"
+        id="login-pass"
+        placeholder="Enter password"
+        autocomplete="current-password"
+      />
+    </div>
+
+    <button class="btn-login" onclick="doLogin()">Access Portal</button>
+
+    <div class="login-error" id="login-error">
+      ⚠ Invalid credentials. Access denied.
+    </div>
+
+  </div><!-- /.login-box -->
+</div><!-- /#login-page -->

@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Media Operations — The Crew</title>
+
+  <!--
+    ╔══════════════════════════════════════════════════╗
+    ║  MEDIA OPERATIONS — Project Structure            ║
+    ╠══════════════════════════════════════════════════╣
+    ║  index.html          ← entry point               ║
+    ║  The_Crew_Logo.jpeg  ← logo image                ║
+    ║                                                  ║
+    ║  css/                                            ║
+    ║    variables.css     global tokens & base        ║
+    ║    login.css         login overlay               ║
+    ║    layout.css        header, nav, tab shell      ║
+    ║    lyrics.css        lyrics formatter tab        ║
+    ║    calendar.css      booking calendar tab        ║
+    ║                                                  ║
+    ║  js/                                             ║
+    ║    users.js          ← ADD/REMOVE USERS HERE     ║
+    ║    utils.js          toast, tab-switching        ║
+    ║    auth.js           login / logout              ║
+    ║    lyrics.js         formatter logic             ║
+    ║    calendar.js       booking logic               ║
+    ║                                                  ║
+    ║  pages/                                          ║
+    ║    login.html        login markup reference      ║
+    ║    lyrics.html       lyrics tab reference        ║
+    ║    calendar.html     calendar tab reference      ║
+    ╚══════════════════════════════════════════════════╝
+  -->
+
+  <link rel="stylesheet" href="css/variables.css" />
+  <link rel="stylesheet" href="css/login.css" />
+  <link rel="stylesheet" href="css/layout.css" />
+  <link rel="stylesheet" href="css/lyrics.css" />
+  <link rel="stylesheet" href="css/calendar.css" />
+</head>
+<body>
+
+  <!-- ══════════ LOGIN OVERLAY ══════════ -->
+  <div id="login-page">
+    <div class="bg-grid"></div>
+    <div class="login-box">
+
+      <!-- Logo -->
+      <div class="logo-mark">
+        <img src="The_Crew_Logo.jpeg" alt="The Crew Logo" class="logo-img" />
+        <div class="logo-text">
+          <h1>Media Operations</h1>
+          <span>Worship Team Portal</span>
+        </div>
+      </div>
+
+      <!-- Theme verse -->
+      <div class="theme-verse">
+        <strong>Colossians 3:23</strong>
+        "Whatever you do, work at it with all your heart, as working for the Lord, not for human masters."
+      </div>
+
+      <div class="login-title">Secure Access</div>
+
+      <div class="field">
+        <label for="login-user">Username</label>
+        <input type="text" id="login-user" placeholder="Enter username" autocomplete="off" />
+      </div>
+      <div class="field">
+        <label for="login-pass">Password</label>
+        <input type="password" id="login-pass" placeholder="Enter password" autocomplete="current-password" />
+      </div>
+      <button class="btn-login" onclick="doLogin()">Access Portal</button>
+      <div class="login-error" id="login-error">⚠ Invalid credentials. Access denied.</div>
+
+    </div>
+  </div>
+
+  <!-- ══════════ MAIN APP ══════════ -->
+  <div id="app">
+
+    <!-- Header -->
+    <header>
+      <div class="header-logo">
+        <img src="The_Crew_Logo.jpeg" alt="The Crew" class="header-logo-img" />
+        <div class="header-logo-text">
+          <span>Media Operations</span>
+          <span>The Crew — Worship Team Portal</span>
+        </div>
+      </div>
+
+      <div class="header-verse">
+        <strong>Col 3:23</strong> — "Whatever you do, work at it with all your heart, as working for the Lord."
+      </div>
+
+      <div class="header-right">
+        <div class="user-badge">Logged in as: <span id="current-user-display">—</span></div>
+        <button class="btn-logout" onclick="logout()">Logout</button>
+      </div>
+    </header>
+
+    <!-- Navigation -->
+    <nav>
+      <button class="nav-tab active" onclick="switchTab('lyrics', this)">Lyrics Formatter</button>
+      <button class="nav-tab"        onclick="switchTab('calendar', this)">Booking Calendar</button>
+    </nav>
+
+    <!-- ── Lyrics Formatter Tab ── -->
+    <div id="tab-lyrics" class="tab-content active">
+      <div class="content">
+        <div class="section-header">
+          <div class="section-title">Lyrics Formatter</div>
+          <div class="section-sub">Format raw lyrics for worship display</div>
+          <div class="accent-line"></div>
+        </div>
+
+        <div class="format-controls">
+          <button class="ctrl-btn active-ctrl" id="ctrl-sections" onclick="toggleCtrl('sections',this)">Auto-detect Sections</button>
+          <button class="ctrl-btn active-ctrl" id="ctrl-slides"   onclick="toggleCtrl('slides',this)">Split into Slides</button>
+          <button class="ctrl-btn active-ctrl" id="ctrl-caps"     onclick="toggleCtrl('caps',this)">Capitalize Lines</button>
+          <button class="ctrl-btn"             id="ctrl-clean"    onclick="toggleCtrl('clean',this)">Remove Punctuation</button>
+          <button class="ctrl-btn"             id="ctrl-numbers"  onclick="toggleCtrl('numbers',this)">Show Slide Numbers</button>
+        </div>
+
+        <div class="formatter-grid">
+          <div class="panel">
+            <div class="panel-label">Raw Input</div>
+            <textarea id="lyrics-input" class="lyrics-textarea" placeholder="Paste your raw song lyrics here...
+
+Example:
+verse 1
+great is thy faithfulness
+great is thy faithfulness
+morning by morning new mercies i see
+
+chorus
+great is thy faithfulness lord unto me"></textarea>
+            <div class="format-actions">
+              <button class="btn-primary"   onclick="formatLyrics()">Format Lyrics</button>
+              <button class="btn-secondary" onclick="clearAll()">Clear</button>
+            </div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-label">Formatted Output</div>
+            <div id="lyrics-output" class="output-area">
+              <span style="color:var(--text-muted);font-size:12px;letter-spacing:2px;">Formatted lyrics will appear here...</span>
+            </div>
+            <div class="format-actions">
+              <button class="btn-secondary" onclick="copyOutput()">Copy Output</button>
+              <button class="btn-secondary" onclick="downloadOutput()">Download .txt</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Booking Calendar Tab ── -->
+    <div id="tab-calendar" class="tab-content">
+      <div class="content">
+        <div class="section-header">
+          <div class="section-title">Booking Calendar</div>
+          <div class="section-sub">Select a date and reserve your docket slot</div>
+          <div class="accent-line"></div>
+        </div>
+
+        <div class="calendar-layout">
+          <div>
+            <div class="cal-card">
+              <div class="cal-header">
+                <button class="cal-nav" onclick="changeMonth(-1)">&#8592;</button>
+                <div class="cal-month" id="cal-month-label">— —</div>
+                <button class="cal-nav" onclick="changeMonth(1)">&#8594;</button>
+              </div>
+              <div class="cal-grid" id="cal-grid"></div>
+            </div>
+
+            <div style="margin-top:20px;">
+              <div class="panel-label" style="padding:0 0 12px 0;">
+                Upcoming Bookings
+                <span id="booking-count" style="margin-left:6px;font-size:10px;color:var(--text-muted);letter-spacing:1px;"></span>
+              </div>
+              <div id="all-bookings-list"></div>
+            </div>
+          </div>
+
+          <div class="booking-form">
+            <div id="no-date-msg" class="no-date-msg">
+              ← Select a date on the calendar<br>to book your slot
+            </div>
+            <div id="booking-form-area" style="display:none;">
+              <div class="date-info-bar">
+                Booking for: <strong id="selected-date-display">—</strong>
+              </div>
+              <div class="form-row">
+                <label for="book-name">Your Name</label>
+                <input type="text" id="book-name" placeholder="Enter your name" />
+              </div>
+              <div class="form-row">
+                <label for="book-service">Service Time</label>
+                <select id="book-service">
+                  <option value="">Select service...</option>
+                  <option>Sunday First Service  (7:00 AM)</option>
+                  <option>Sunday Second Service (9:30 AM)</option>
+                  <option>Sunday Third Service  (11:30 AM)</option>
+                  <option>Wednesday Evening     (6:30 PM)</option>
+                  <option>Friday Night          (7:00 PM)</option>
+                  <option>Special Event</option>
+                </select>
+              </div>
+              <div class="form-row">
+                <label>Select Docket</label>
+                <div class="docket-pills">
+                  <button class="docket-pill" onclick="selectDocket(this,'Cameras')">Cameras</button>
+                  <button class="docket-pill" onclick="selectDocket(this,'Slides')">Slides</button>
+                  <button class="docket-pill" onclick="selectDocket(this,'Live Stream')">Live Stream</button>
+                  <button class="docket-pill" onclick="selectDocket(this,'Sound')">Sound</button>
+                  <button class="docket-pill" onclick="selectDocket(this,'Lighting')">Lighting</button>
+                  <button class="docket-pill" onclick="selectDocket(this,'Recording')">Recording</button>
+                  <button class="docket-pill" onclick="selectDocket(this,'Graphics')">Graphics</button>
+                  <button class="docket-pill" onclick="selectDocket(this,'Directing')">Directing</button>
+                </div>
+              </div>
+              <div class="form-row">
+                <label for="book-notes">Notes (optional)</label>
+                <input type="text" id="book-notes" placeholder="Any additional notes..." />
+              </div>
+              <button class="btn-book" onclick="addBooking()">Confirm Booking</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /#app -->
+
+  <!-- Scripts — load order matters -->
+  <script src="js/users.js"></script>
+  <script src="js/utils.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/lyrics.js"></script>
+  <script src="js/calendar.js"></script>
+
+</body>
+</html>

@@ -1,0 +1,37 @@
+/* layout.css — Header, nav, tab shell — Black & White theme */
+
+#app { display: none; min-height: 100vh; }
+
+header { position: sticky; top: 0; z-index: 50; background: rgba(10,10,10,0.95); backdrop-filter: blur(12px); border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; padding: 0 32px; height: 64px; }
+
+.header-logo { display: flex; align-items: center; gap: 12px; text-decoration: none; }
+.header-logo-img { width: 40px; height: 40px; object-fit: contain; border-radius: 3px; }
+.header-logo-text { display: flex; flex-direction: column; }
+.header-logo-text span:first-child { font-family: var(--font-display); font-size: 20px; letter-spacing: 3px; color: var(--text); line-height: 1; }
+.header-logo-text span:last-child { font-size: 9px; letter-spacing: 3px; color: var(--text-muted); text-transform: uppercase; }
+
+/* Verse ticker in header */
+.header-verse { font-family: var(--font-body); font-size: 12px; font-style: italic; color: var(--text-muted); letter-spacing: 1px; flex: 1; text-align: center; padding: 0 20px; }
+.header-verse strong { color: var(--accent-dim); font-style: normal; }
+
+.header-right { display: flex; align-items: center; gap: 16px; }
+.user-badge { font-size: 12px; letter-spacing: 2px; color: var(--text-muted); text-transform: uppercase; white-space: nowrap; }
+.user-badge span { color: var(--accent); }
+.btn-logout { background: transparent; border: 1px solid var(--border-bright); color: var(--text-muted); font-family: var(--font-body); font-size: 12px; letter-spacing: 2px; padding: 6px 14px; cursor: pointer; text-transform: uppercase; transition: all 0.2s; }
+.btn-logout:hover { border-color: var(--accent); color: var(--accent); }
+
+nav { display: flex; background: var(--black-2); border-bottom: 1px solid var(--border); padding: 0 32px; position: relative; z-index: 40; }
+.nav-tab { background: none; border: none; color: var(--text-muted); font-family: var(--font-body); font-size: 13px; letter-spacing: 3px; text-transform: uppercase; padding: 16px 24px; cursor: pointer; border-bottom: 2px solid transparent; transition: all 0.2s; }
+.nav-tab:hover { color: var(--text); }
+.nav-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+.tab-content { display: none; }
+.tab-content.active { display: block; animation: fadeUp 0.3s ease; }
+
+@media (max-width: 700px) {
+  header { padding: 0 16px; height: 56px; }
+  .header-verse { display: none; }
+  nav { padding: 0 12px; }
+  .nav-tab { padding: 14px 12px; font-size: 11px; letter-spacing: 2px; }
+  .user-badge { display: none; }
+}

@@ -1,0 +1,89 @@
+/* ================================================
+   variables.css — Global design tokens & base styles
+   Media Operations Portal
+   Theme: Black & White (matching The Crew logo)
+   ================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Rajdhani:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+:root {
+  --accent:        #FFFFFF;
+  --accent-dim:    rgba(255,255,255,0.6);
+  --accent-muted:  rgba(255,255,255,0.15);
+  --black:         #0A0A0A;
+  --black-2:       #111111;
+  --black-3:       #1A1A1A;
+  --black-4:       #222222;
+  --gray:          #2e2e2e;
+  --gray-2:        #3d3d3d;
+  --text:          #F5F5F5;
+  --text-muted:    #888888;
+  --border:        rgba(255,255,255,0.12);
+  --border-bright: rgba(255,255,255,0.35);
+
+  --font-display: 'Bebas Neue', sans-serif;
+  --font-body:    'Rajdhani', sans-serif;
+  --font-mono:    'JetBrains Mono', monospace;
+}
+
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: var(--font-body);
+  background: var(--black);
+  color: var(--text);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.4;
+}
+
+.bg-grid {
+  position: fixed;
+  inset: 0;
+  background:
+    repeating-linear-gradient(90deg, transparent, transparent 60px, rgba(255,255,255,0.02) 60px, rgba(255,255,255,0.02) 61px),
+    repeating-linear-gradient(0deg,  transparent, transparent 60px, rgba(255,255,255,0.02) 60px, rgba(255,255,255,0.02) 61px);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.section-header { margin-bottom: 28px; }
+.section-title { font-family: var(--font-display); font-size: 32px; letter-spacing: 4px; color: var(--text); line-height: 1; }
+.section-sub { font-size: 13px; letter-spacing: 2px; color: var(--text-muted); margin-top: 4px; text-transform: uppercase; }
+.accent-line { width: 48px; height: 2px; background: var(--accent); margin-top: 10px; }
+
+.panel { background: var(--black-3); border: 1px solid var(--border); padding: 24px; }
+.panel-label { font-size: 11px; letter-spacing: 3px; color: var(--accent); text-transform: uppercase; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+.panel-label::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+.btn-primary { background: var(--accent); border: none; color: var(--black); font-family: var(--font-display); font-size: 18px; letter-spacing: 4px; padding: 12px 28px; cursor: pointer; transition: opacity 0.2s, transform 0.1s; }
+.btn-primary:hover { opacity: 0.88; }
+.btn-primary:active { transform: scale(0.99); }
+.btn-primary:disabled { background: var(--gray); color: var(--text-muted); cursor: not-allowed; }
+
+.btn-secondary { background: transparent; border: 1px solid var(--border-bright); color: var(--text-muted); font-family: var(--font-body); font-size: 12px; letter-spacing: 2px; padding: 10px 20px; cursor: pointer; text-transform: uppercase; transition: all 0.2s; }
+.btn-secondary:hover { border-color: var(--accent); color: var(--text); }
+
+.toast { position: fixed; bottom: 28px; right: 28px; background: var(--black-3); border: 1px solid var(--border-bright); border-left: 4px solid var(--accent); padding: 14px 20px; font-size: 13px; letter-spacing: 1px; color: var(--text); z-index: 9999; animation: slideIn 0.3s ease, fadeOut 0.3s ease 2.2s forwards; pointer-events: none; }
+
+@keyframes fadeUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes slideIn { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
+@keyframes fadeOut { to { opacity: 0; } }
+.anim-fadeup { animation: fadeUp 0.4s ease forwards; }
+
+.field { margin-bottom: 18px; }
+.field label { display: block; font-size: 11px; letter-spacing: 3px; color: var(--text-muted); margin-bottom: 8px; text-transform: uppercase; }
+.field input, .form-row input, .form-row select { width: 100%; background: var(--black-4); border: 1px solid var(--border); color: var(--text); font-family: var(--font-body); font-size: 15px; padding: 11px 14px; outline: none; transition: border-color 0.2s; appearance: none; }
+.field input:focus, .form-row input:focus, .form-row select:focus { border-color: var(--accent); }
+
+.content { padding: 36px 32px; max-width: 1100px; margin: 0 auto; position: relative; z-index: 1; }
+@media (max-width: 900px) { .content { padding: 24px 16px; } }

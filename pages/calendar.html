@@ -1,0 +1,112 @@
+<!--
+  pages/calendar.html
+  Booking Calendar tab markup — included inside index.html
+  ================================================
+
+  Styles live in  css/calendar.css
+  Logic lives in  js/calendar.js
+-->
+
+<div id="tab-calendar" class="tab-content">
+  <div class="content">
+
+    <!-- Section header -->
+    <div class="section-header">
+      <div class="section-title">Booking Calendar</div>
+      <div class="section-sub">Select a date and reserve your docket slot</div>
+      <div class="red-line"></div>
+    </div>
+
+    <div class="calendar-layout">
+
+      <!-- Left column: calendar + bookings list -->
+      <div>
+
+        <!-- Calendar widget -->
+        <div class="cal-card">
+          <div class="cal-header">
+            <button class="cal-nav" onclick="changeMonth(-1)" aria-label="Previous month">&#8592;</button>
+            <div class="cal-month" id="cal-month-label">— —</div>
+            <button class="cal-nav" onclick="changeMonth(1)"  aria-label="Next month">&#8594;</button>
+          </div>
+          <div class="cal-grid" id="cal-grid"></div>
+        </div>
+
+        <!-- Upcoming bookings -->
+        <div style="margin-top:20px;">
+          <div class="panel-label" style="padding:0 0 12px 0;">
+            Upcoming Bookings
+            <span
+              id="booking-count"
+              style="margin-left:6px;font-size:10px;color:var(--text-muted);letter-spacing:1px;"
+            ></span>
+          </div>
+          <div id="all-bookings-list"></div>
+        </div>
+
+      </div><!-- /left column -->
+
+      <!-- Right column: booking form -->
+      <div class="booking-form">
+
+        <!-- Shown when no date is selected -->
+        <div id="no-date-msg" class="no-date-msg">
+          ← Select a date on the calendar<br>to book your slot
+        </div>
+
+        <!-- Shown after a date is selected -->
+        <div id="booking-form-area" style="display:none;">
+
+          <div class="date-info-bar">
+            Booking for: <strong id="selected-date-display">—</strong>
+          </div>
+
+          <!-- Name -->
+          <div class="form-row">
+            <label for="book-name">Your Name</label>
+            <input type="text" id="book-name" placeholder="Enter your name" />
+          </div>
+
+          <!-- Service time -->
+          <div class="form-row">
+            <label for="book-service">Service Time</label>
+            <select id="book-service">
+              <option value="">Select service...</option>
+              <option>Sunday First Service  (7:00 AM)</option>
+              <option>Sunday Second Service (9:30 AM)</option>
+              <option>Sunday Third Service  (11:30 AM)</option>
+              <option>Wednesday Evening     (6:30 PM)</option>
+              <option>Friday Night          (7:00 PM)</option>
+              <option>Special Event</option>
+            </select>
+          </div>
+
+          <!-- Docket pills -->
+          <div class="form-row">
+            <label>Select Docket</label>
+            <div class="docket-pills">
+              <button class="docket-pill" onclick="selectDocket(this, 'Cameras')">Cameras</button>
+              <button class="docket-pill" onclick="selectDocket(this, 'Slides')">Slides</button>
+              <button class="docket-pill" onclick="selectDocket(this, 'Live Stream')">Live Stream</button>
+              <button class="docket-pill" onclick="selectDocket(this, 'Sound')">Sound</button>
+              <button class="docket-pill" onclick="selectDocket(this, 'Lighting')">Lighting</button>
+              <button class="docket-pill" onclick="selectDocket(this, 'Recording')">Recording</button>
+              <button class="docket-pill" onclick="selectDocket(this, 'Graphics')">Graphics</button>
+              <button class="docket-pill" onclick="selectDocket(this, 'Directing')">Directing</button>
+            </div>
+          </div>
+
+          <!-- Notes -->
+          <div class="form-row">
+            <label for="book-notes">Notes (optional)</label>
+            <input type="text" id="book-notes" placeholder="Any additional notes..." />
+          </div>
+
+          <button class="btn-book" onclick="addBooking()">Confirm Booking</button>
+
+        </div><!-- /#booking-form-area -->
+      </div><!-- /.booking-form -->
+
+    </div><!-- /.calendar-layout -->
+  </div><!-- /.content -->
+</div><!-- /#tab-calendar -->

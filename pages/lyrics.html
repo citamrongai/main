@@ -1,0 +1,102 @@
+<!--
+  pages/lyrics.html
+  Lyrics Formatter tab markup — included inside index.html
+  ================================================
+
+  Styles live in  css/lyrics.css
+  Logic lives in  js/lyrics.js
+-->
+
+<div id="tab-lyrics" class="tab-content active">
+  <div class="content">
+
+    <!-- Section header -->
+    <div class="section-header">
+      <div class="section-title">Lyrics Formatter</div>
+      <div class="section-sub">Format raw lyrics for worship display</div>
+      <div class="red-line"></div>
+    </div>
+
+    <!-- Format toggle controls -->
+    <div class="format-controls">
+      <button
+        class="ctrl-btn active-ctrl"
+        id="ctrl-sections"
+        onclick="toggleCtrl('sections', this)"
+        title="Detect labels like Verse, Chorus, Bridge automatically"
+      >Auto-detect Sections</button>
+
+      <button
+        class="ctrl-btn active-ctrl"
+        id="ctrl-slides"
+        onclick="toggleCtrl('slides', this)"
+        title="Break content into slides of max 4 lines"
+      >Split into Slides</button>
+
+      <button
+        class="ctrl-btn active-ctrl"
+        id="ctrl-caps"
+        onclick="toggleCtrl('caps', this)"
+        title="Capitalise the first letter of every line"
+      >Capitalize Lines</button>
+
+      <button
+        class="ctrl-btn"
+        id="ctrl-clean"
+        onclick="toggleCtrl('clean', this)"
+        title="Remove commas, full stops, quotes, etc."
+      >Remove Punctuation</button>
+
+      <button
+        class="ctrl-btn"
+        id="ctrl-numbers"
+        onclick="toggleCtrl('numbers', this)"
+        title="Add SLIDE 1, SLIDE 2 … labels"
+      >Show Slide Numbers</button>
+    </div>
+
+    <!-- Two-column editor -->
+    <div class="formatter-grid">
+
+      <!-- Input panel -->
+      <div class="panel">
+        <div class="panel-label">Raw Input</div>
+        <textarea
+          id="lyrics-input"
+          class="lyrics-textarea"
+          placeholder="Paste your raw song lyrics here...
+
+Example:
+verse 1
+great is thy faithfulness
+great is thy faithfulness
+morning by morning new mercies i see
+
+chorus
+great is thy faithfulness lord unto me"
+        ></textarea>
+
+        <div class="format-actions">
+          <button class="btn-primary" onclick="formatLyrics()">Format Lyrics</button>
+          <button class="btn-secondary" onclick="clearAll()">Clear</button>
+        </div>
+      </div>
+
+      <!-- Output panel -->
+      <div class="panel">
+        <div class="panel-label">Formatted Output</div>
+        <div id="lyrics-output" class="output-area">
+          <span style="color:var(--text-muted);font-size:12px;letter-spacing:2px;">
+            Formatted lyrics will appear here...
+          </span>
+        </div>
+
+        <div class="format-actions">
+          <button class="btn-secondary" onclick="copyOutput()">Copy Output</button>
+          <button class="btn-secondary" onclick="downloadOutput()">Download .txt</button>
+        </div>
+      </div>
+
+    </div><!-- /.formatter-grid -->
+  </div><!-- /.content -->
+</div><!-- /#tab-lyrics -->
