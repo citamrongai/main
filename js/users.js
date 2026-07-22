@@ -1,60 +1,23 @@
-/* ================================================
-   users.js — User database (developer-managed only)
-   Media Operations Portal
+// js/users.js
 
-   HOW TO ADD A USER:
-   Copy one of the existing entries below, paste it
-   at the end of the array, and fill in the details.
-   Save the file. That's it — no backend needed.
+// Simple Admin credentials check
+const ADMIN_CREDENTIALS = {
+    username: "CITAM",
+    password: "P@sscode13" // Replace with your preferred passcode
+};
 
-   Fields:
-     username  — what they type to log in (lowercase)
-     password  — their login password
-     name      — display name shown in the portal
-     role      — their media team role (for display only)
-   ================================================ */
+function isAdminLoggedIn() {
+    return localStorage.getItem('isAdminLoggedIn') === 'true';
+}
 
-const USERS = [
-  {
-    username: "Tester",
-    password: "2422@Godwithus",
-    name:     "Emmanuel Lalampaa",
-    role:     "Developer"
-  },
+function loginAdmin(username, password) {
+    if (username === ADMIN_CREDENTIALS.username && password === ADMIN_CREDENTIALS.password) {
+        localStorage.setItem('isAdminLoggedIn', 'true');
+        return true;
+    }
+    return false;
+}
 
-  {
-    username: "Nick",
-    password: "nick2024",
-    name:     "Nicknol Ooma",
-    role:     "Projection Operator"
-  },
-   
-  {
-     username: "Amos",
-     password: "amos2024",
-     name:     "Amos Kiprotich",
-     role:     "Department Leader"
-      
-  },
-   {
-      username: "King",
-      password: "berur2024",
-      name:     "Ryan Berur",
-      role:     "Developer"
-   },
-
-   {
-      username: "Tinashe",
-      password: "Tinashe-supports-a-looser/loser-team😂",
-      name:     "Tinashe Shikali",
-      role:     "Camera Lady😂"
-   }
-  /* ── Add more users below this line ─────────────
-  {
-    username: "mary",
-    password: "mary2024",
-    name:     "Mary Otieno",
-    role:     "Lighting Operator"
-  },
-  ────────────────────────────────────────────── */
-];
+function logoutAdmin() {
+    localStorage.setItem('isAdminLoggedIn', 'false');
+}
