@@ -1,56 +1,30 @@
-/* ================================================
-   auth.js — Login / logout logic
-   Media Operations Portal
-   ================================================ */
+// js/auth.js
 
-let currentUser = null;
+// 1. Set your Admin Passcode credentials
+const ADMIN_CREDENTIALS = {
+    username: "admin",
+    password: "password123" 
+};
 
-function doLogin() {
-  const username = document.getElementById('login-user').value.trim();
-  const password = document.getElementById('login-pass').value;
-
-  const user = USERS.find(u => u.username === username && u.password === password);
-
-  if (user) {
-    currentUser = user;
-    document.getElementById('current-user-display').textContent = user.name;
-
-    // Hide login, show app
-    document.getElementById('login-page').style.display = 'none';
-    document.getElementById('app').style.display = 'block';
-
-    // Initialise modules
-    renderCalendar();
-    renderAllBookings();
-  } else {
-    const err = document.getElementById('login-error');
-    err.style.display = 'block';
-    // Re-trigger animation on repeated wrong attempts
-    err.style.animation = 'none';
-    requestAnimationFrame(() => { err.style.animation = ''; });
-  }
+// 2. Check if Admin is currently logged in
+function isAdminLoggedIn() {
+    return localStorage.getItem('isAdminLoggedIn') === 'true';
 }
 
-function logout() {
-  currentUser = null;
-
-  document.getElementById('login-page').style.display = 'flex';
-  document.getElementById('app').style.display = 'none';
-
-  // Clear fields
-  document.getElementById('login-user').value  = '';
-  document.getElementById('login-pass').value  = '';
-  document.getElementById('login-error').style.display = 'none';
-
-  // Reset tabs back to Lyrics
-  switchTab('lyrics', document.querySelector('.nav-tab'));
+// 3. Admin login action
+function loginAdmin(username, password) {
+    if (username === ADMIN_CREDENTIALS.username && password === ADMIN_CREDENTIALS.password) {
+        localStorage.setItem('isAdminLoggedIn', 'true');
+        return true;
+    }
+    return false;
 }
 
-/* ---- Keyboard shortcuts ---- */
-document.addEventListener('DOMContentLoaded', () => {
-  ['login-user', 'login-pass'].forEach(id => {
-    document.getElementById(id).addEventListener('keydown', e => {
-      if (e.key === 'Enter') doLogin();
-    });
-  });
-});
+// 4. Admin logout action
+function logoutAdmin() {
+    localStorage.removeItem('isAdminLoggedIn');
+    window.location.reload();
+}
+
+// NO AUTOMATIC REDIRECTS HERE!
+// Anyone can view the site by default.
