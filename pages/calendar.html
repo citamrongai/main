@@ -1,112 +1,99 @@
-<!--
-  pages/calendar.html
-  Booking Calendar tab markup — included inside index.html
-  ================================================
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Booking Calendar - Media Operations Portal</title>
+    <link rel="stylesheet" href="../css/variables.css">
+    <link rel="stylesheet" href="../css/layout.css">
+    <link rel="stylesheet" href="../css/calendar.css">
+    <!-- EmailJS SDK -->
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+    <script type="text/javascript">
+        (function(){
+            emailjs.init("YOUR_EMAILJS_PUBLIC_KEY");
+        })();
+    </script>
+</head>
+<body>
+    <div id="calendar-tab" class="tab-content">
+        <div class="calendar-header">
+            <h2>Service Roster & Booking</h2>
+            
+            <div class="header-actions">
+                <!-- Admin Action Controls (Visible only to Admin) -->
+                <div id="admin-controls" class="hidden">
+                    <button id="add-event-btn" class="btn-primary">+ Add Event</button>
+                    <button id="finalize-roster-btn" class="btn-secondary">Finalize & Email</button>
+                    <button id="admin-logout-btn" class="btn-secondary">Logout Admin</button>
+                </div>
+                <!-- Admin Login Button (Visible to Public) -->
+                <button id="admin-login-btn" class="btn-secondary">Admin Login</button>
+            </div>
+        </div>
 
-  Styles live in  css/calendar.css
-  Logic lives in  js/calendar.js
--->
+        <!-- Thursday Deadline Banner -->
+        <div id="urgent-banner" class="banner hidden">
+            <strong>URGENT:</strong> Slots are still open for this weekend's service! Please register your availability below.
+        </div>
 
-<div id="tab-calendar" class="tab-content">
-  <div class="content">
+        <!-- Service Events Grid -->
+        <div id="calendar-grid" class="calendar-grid"></div>
 
-    <!-- Section header -->
-    <div class="section-header">
-      <div class="section-title">Booking Calendar</div>
-      <div class="section-sub">Select a date and reserve your docket slot</div>
-      <div class="red-line"></div>
+        <!-- Volunteer Registration Modal -->
+        <div id="booking-modal" class="modal hidden">
+            <div class="modal-content">
+                <span class="close-btn" id="close-booking-modal">&times;</span>
+                <h3>Register Availability</h3>
+                <form id="booking-form">
+                    <div class="form-group">
+                        <label for="user-name">Your Full Name</label>
+                        <input type="text" id="user-name" placeholder="e.g. Jane Doe" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="user-phone">Phone Number (10 Digits)</label>
+                        <input type="tel" id="user-phone" placeholder="07... or 01..." required>
+                        <small id="phone-error" class="error-msg hidden">Must be 10 digits starting with 07 or 01.</small>
+                    </div>
+                    <div class="form-group">
+                        <label for="role-select">Select Role</label>
+                        <select id="role-select" required>
+                            <option value="">-- Select a Role --</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="service-select">Select Service</label>
+                        <select id="service-select" required disabled>
+                            <option value="">-- Select Service --</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn-primary">Confirm Slot</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Admin Login Modal -->
+        <div id="admin-modal" class="modal hidden">
+            <div class="modal-content">
+                <span class="close-btn" id="close-admin-modal">&times;</span>
+                <h3>Admin Login</h3>
+                <form id="admin-login-form">
+                    <div class="form-group">
+                        <label>Username</label>
+                        <input type="text" id="admin-username" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Password</label>
+                        <input type="password" id="admin-password" required>
+                    </div>
+                    <small id="login-error" class="error-msg hidden">Invalid credentials.</small>
+                    <button type="submit" class="btn-primary" style="margin-top:10px;">Login</button>
+                </form>
+            </div>
+        </div>
     </div>
 
-    <div class="calendar-layout">
-
-      <!-- Left column: calendar + bookings list -->
-      <div>
-
-        <!-- Calendar widget -->
-        <div class="cal-card">
-          <div class="cal-header">
-            <button class="cal-nav" onclick="changeMonth(-1)" aria-label="Previous month">&#8592;</button>
-            <div class="cal-month" id="cal-month-label">— —</div>
-            <button class="cal-nav" onclick="changeMonth(1)"  aria-label="Next month">&#8594;</button>
-          </div>
-          <div class="cal-grid" id="cal-grid"></div>
-        </div>
-
-        <!-- Upcoming bookings -->
-        <div style="margin-top:20px;">
-          <div class="panel-label" style="padding:0 0 12px 0;">
-            Upcoming Bookings
-            <span
-              id="booking-count"
-              style="margin-left:6px;font-size:10px;color:var(--text-muted);letter-spacing:1px;"
-            ></span>
-          </div>
-          <div id="all-bookings-list"></div>
-        </div>
-
-      </div><!-- /left column -->
-
-      <!-- Right column: booking form -->
-      <div class="booking-form">
-
-        <!-- Shown when no date is selected -->
-        <div id="no-date-msg" class="no-date-msg">
-          ← Select a date on the calendar<br>to book your slot
-        </div>
-
-        <!-- Shown after a date is selected -->
-        <div id="booking-form-area" style="display:none;">
-
-          <div class="date-info-bar">
-            Booking for: <strong id="selected-date-display">—</strong>
-          </div>
-
-          <!-- Name -->
-          <div class="form-row">
-            <label for="book-name">Your Name</label>
-            <input type="text" id="book-name" placeholder="Enter your name" />
-          </div>
-
-          <!-- Service time -->
-          <div class="form-row">
-            <label for="book-service">Service Time</label>
-            <select id="book-service">
-              <option value="">Select service...</option>
-              <option>Sunday First Service  (7:00 AM)</option>
-              <option>Sunday Second Service (9:30 AM)</option>
-              <option>Sunday Third Service  (11:30 AM)</option>
-              <option>Wednesday Evening     (6:30 PM)</option>
-              <option>Friday Night          (7:00 PM)</option>
-              <option>Special Event</option>
-            </select>
-          </div>
-
-          <!-- Docket pills -->
-          <div class="form-row">
-            <label>Select Docket</label>
-            <div class="docket-pills">
-              <button class="docket-pill" onclick="selectDocket(this, 'Cameras')">Cameras</button>
-              <button class="docket-pill" onclick="selectDocket(this, 'Slides')">Slides</button>
-              <button class="docket-pill" onclick="selectDocket(this, 'Live Stream')">Live Stream</button>
-              <button class="docket-pill" onclick="selectDocket(this, 'Sound')">Sound</button>
-              <button class="docket-pill" onclick="selectDocket(this, 'Lighting')">Lighting</button>
-              <button class="docket-pill" onclick="selectDocket(this, 'Recording')">Recording</button>
-              <button class="docket-pill" onclick="selectDocket(this, 'Graphics')">Graphics</button>
-              <button class="docket-pill" onclick="selectDocket(this, 'Directing')">Directing</button>
-            </div>
-          </div>
-
-          <!-- Notes -->
-          <div class="form-row">
-            <label for="book-notes">Notes (optional)</label>
-            <input type="text" id="book-notes" placeholder="Any additional notes..." />
-          </div>
-
-          <button class="btn-book" onclick="addBooking()">Confirm Booking</button>
-
-        </div><!-- /#booking-form-area -->
-      </div><!-- /.booking-form -->
-
-    </div><!-- /.calendar-layout -->
-  </div><!-- /.content -->
-</div><!-- /#tab-calendar -->
+    <script src="../js/users.js"></script>
+    <script src="../js/calendar.js"></script>
+</body>
+</html>
