@@ -1,199 +1,267 @@
-/* ================================================
-   calendar.js — Booking calendar logic
-   Media Operations Portal
-   ================================================ */
+// js/calendar.js
 
-/* ---- State ---- */
-let bookings      = JSON.parse(localStorage.getItem('mo_bookings') || '[]');
-let selectedDate  = null;
-let selectedDocket = null;
+const ROLE_CONFIG = {
+    photography: { name: "Photography", type: "split" },
+    cam1:        { name: "Videography - Camera 1", type: "split" },
+    cam2:        { name: "Videography - Camera 2", type: "both" },
+    director:    { name: "Director", type: "both" },
+    livestream:  { name: "Livestream", type: "both" },
+    projection:  { name: "Projection", type: "split" },
+    stage:       { name: "Stage Management", type: "both", max: 1 },
+    sound:       { name: "Sound", type: "both", max: 1},
+    social:      { name: "Social Media", type: "both_multiple", max: 2 }
+};
 
-const now = new Date();
-let calYear  = now.getFullYear();
-let calMonth = now.getMonth();
+let events = JSON.parse(localStorage.getItem('worshipEvents')) || [];
+let selectedEventId = null;
 
-const MONTHS = [
-  'JANUARY','FEBRUARY','MARCH','APRIL','MAY','JUNE',
-  'JULY','AUGUST','SEPTEMBER','OCTOBER','NOVEMBER','DECEMBER',
-];
-const DAY_NAMES = ['SUN','MON','TUE','WED','THU','FRI','SAT'];
+// DOM Elements
+const adminControls = document.getElementById('admin-controls');
+const adminLoginBtn = document.getElementById('admin-login-btn');
+const adminLogoutBtn = document.getElementById('admin-logout-btn');
+const calendarGrid = document.getElementById('calendar-grid');
+const urgentBanner = document.getElementById('urgent-banner');
 
-/* ---- Helpers ---- */
-function dateStr(d) {
-  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+const bookingModal = document.getElementById('booking-modal');
+const bookingForm = document.getElementById('booking-form');
+const roleSelect = document.getElementById('role-select');
+const serviceSelect = document.getElementById('service-select');
+
+const adminModal = document.getElementById('admin-modal');
+const adminLoginForm = document.getElementById('admin-login-form');
+
+document.addEventListener('DOMContentLoaded', () => {
+    updateAdminUI();
+    renderCalendar();
+    checkThursdayDeadline();
+    setupEventListeners();
+});
+
+function setupEventListeners() {
+    // Admin Modal toggle
+    adminLoginBtn.addEventListener('click', () => adminModal.classList.remove('hidden'));
+    document.getElementById('close-admin-modal').addEventListener('click', () => adminModal.classList.add('hidden'));
+    document.getElementById('close-booking-modal').addEventListener('click', () => bookingModal.classList.add('hidden'));
+
+    // Admin Auth Form
+    adminLoginForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const u = document.getElementById('admin-username').value;
+        const p = document.getElementById('admin-password').value;
+        if (loginAdmin(u, p)) {
+            adminModal.classList.add('hidden');
+            updateAdminUI();
+        } else {
+            document.getElementById('login-error').classList.remove('hidden');
+        }
+    });
+
+    adminLogoutBtn.addEventListener('click', () => {
+        logoutAdmin();
+        updateAdminUI();
+    });
+
+    document.getElementById('add-event-btn').addEventListener('click', handleAddEvent);
+    document.getElementById('finalize-roster-btn').addEventListener('click', handleFinalizeAndEmail);
 }
 
-function todayStr() { return dateStr(now); }
+function updateAdminUI() {
+    if (isAdminLoggedIn()) {
+        adminControls.classList.remove('hidden');
+        adminLoginBtn.classList.add('hidden');
+    } else {
+        adminControls.classList.add('hidden');
+        adminLoginBtn.classList.remove('hidden');
+    }
+}
 
-/* ---- Render the calendar grid ---- */
+function handleAddEvent() {
+    const dateStr = prompt("Enter Service Date (YYYY-MM-DD):");
+    if (!dateStr) return;
+
+    const newEvent = { id: "evt_" + Date.now(), date: dateStr, roster: {} };
+
+    Object.keys(ROLE_CONFIG).forEach(key => {
+        const type = ROLE_CONFIG[key].type;
+        if (type === 'split') newEvent.roster[key] = { service1: null, service2: null };
+        else if (type === 'both') newEvent.roster[key] = { both: null };
+        else if (type === 'both_multiple') newEvent.roster[key] = { both: [] };
+    });
+
+    events.push(newEvent);
+    saveEvents();
+    renderCalendar();
+}
+
 function renderCalendar() {
-  document.getElementById('cal-month-label').textContent =
-    `${MONTHS[calMonth]} ${calYear}`;
-
-  const grid = document.getElementById('cal-grid');
-  grid.innerHTML = '';
-
-  // Day name headers
-  DAY_NAMES.forEach(name => {
-    const el = document.createElement('div');
-    el.className = 'cal-day-name';
-    el.textContent = name;
-    grid.appendChild(el);
-  });
-
-  const firstWeekday = new Date(calYear, calMonth, 1).getDay();
-  const daysInMonth  = new Date(calYear, calMonth + 1, 0).getDate();
-  const today        = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-
-  // Empty cells before day 1
-  for (let i = 0; i < firstWeekday; i++) {
-    const el = document.createElement('div');
-    el.className = 'cal-day empty';
-    grid.appendChild(el);
-  }
-
-  // Day cells
-  for (let d = 1; d <= daysInMonth; d++) {
-    const ds      = `${calYear}-${String(calMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-    const dayDate = new Date(calYear, calMonth, d);
-    const el      = document.createElement('div');
-
-    el.className  = 'cal-day';
-    el.textContent = d;
-
-    if (ds === todayStr())    el.classList.add('today');
-    if (dayDate < today)      el.classList.add('past');
-    if (ds === selectedDate)  el.classList.add('selected');
-    if (bookings.some(b => b.date === ds)) el.classList.add('has-booking');
-
-    if (dayDate >= today) {
-      el.addEventListener('click', () => selectDate(ds, dayDate));
+    calendarGrid.innerHTML = '';
+    if (events.length === 0) {
+        calendarGrid.innerHTML = '<p>No service events scheduled yet.</p>';
+        return;
     }
 
-    grid.appendChild(el);
-  }
+    events.forEach(ev => {
+        const full = isRosterFull(ev);
+        const card = document.createElement('div');
+        card.className = 'event-card';
+        card.innerHTML = `
+            <h3>${ev.date}</h3>
+            <p><strong>Status:</strong> ${full ? 'Roster Complete' : 'Open Slots Available'}</p>
+        `;
+        card.addEventListener('click', () => openBookingModal(ev));
+        calendarGrid.appendChild(card);
+    });
 }
 
-/* ---- Change calendar month ---- */
-function changeMonth(dir) {
-  calMonth += dir;
-  if (calMonth < 0)  { calMonth = 11; calYear--; }
-  if (calMonth > 11) { calMonth = 0;  calYear++; }
-  renderCalendar();
+function openBookingModal(ev) {
+    selectedEventId = ev.id;
+    populateRoleOptions(ev);
+    bookingModal.classList.remove('hidden');
 }
 
-/* ---- Select a date ---- */
-function selectDate(ds, dateObj) {
-  selectedDate  = ds;
-  selectedDocket = null;
+function populateRoleOptions(ev) {
+    roleSelect.innerHTML = '<option value="">-- Select a Role --</option>';
+    serviceSelect.innerHTML = '<option value="">-- Select Service --</option>';
+    serviceSelect.disabled = true;
 
-  // Clear docket selection
-  document.querySelectorAll('.docket-pill').forEach(p => p.classList.remove('selected-pill'));
+    Object.entries(ROLE_CONFIG).forEach(([key, config]) => {
+        const slot = ev.roster[key];
+        let hasSpace = false;
 
-  renderCalendar();
+        if (config.type === 'split') {
+            if (!slot.service1 || !slot.service2) hasSpace = true;
+        } else if (config.type === 'both') {
+            if (!slot.both) hasSpace = true;
+        } else if (config.type === 'both_multiple') {
+            if (slot.both.length < config.max) hasSpace = true;
+        }
 
-  // Human-readable label
-  const fmt = dateObj.toLocaleDateString('en-KE', {
-    weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
-  });
-
-  document.getElementById('selected-date-display').textContent = fmt;
-  document.getElementById('no-date-msg').style.display         = 'none';
-  document.getElementById('booking-form-area').style.display   = 'block';
+        if (hasSpace) {
+            const opt = document.createElement('option');
+            opt.value = key;
+            opt.textContent = config.name;
+            roleSelect.appendChild(opt);
+        }
+    });
 }
 
-/* ---- Select a docket pill ---- */
-function selectDocket(btn, docket) {
-  document.querySelectorAll('.docket-pill').forEach(p => p.classList.remove('selected-pill'));
-  btn.classList.add('selected-pill');
-  selectedDocket = docket;
+roleSelect.addEventListener('change', (e) => {
+    const roleKey = e.target.value;
+    const ev = events.find(item => item.id === selectedEventId);
+    serviceSelect.innerHTML = '<option value="">-- Select Service --</option>';
+
+    if (!roleKey) {
+        serviceSelect.disabled = true;
+        return;
+    }
+
+    serviceSelect.disabled = false;
+    const config = ROLE_CONFIG[roleKey];
+    const slot = ev.roster[roleKey];
+
+    if (config.type === 'split') {
+        if (!slot.service1) serviceSelect.insertAdjacentHTML('beforeend', '<option value="service1">1st Service</option>');
+        if (!slot.service2) serviceSelect.insertAdjacentHTML('beforeend', '<option value="service2">2nd Service</option>');
+    } else {
+        serviceSelect.insertAdjacentHTML('beforeend', '<option value="both">Both Services</option>');
+    }
+});
+
+// Submit Availability
+bookingForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+
+    const nameValue = document.getElementById('user-name').value.trim();
+    const phoneValue = document.getElementById('user-phone').value.trim();
+    const phoneError = document.getElementById('phone-error');
+    const kenyaPhoneRegex = /^(07|01)\d{8}$/;
+
+    if (!kenyaPhoneRegex.test(phoneValue)) {
+        phoneError.classList.remove('hidden');
+        return;
+    }
+    phoneError.classList.add('hidden');
+
+    const roleKey = roleSelect.value;
+    const serviceKey = serviceSelect.value;
+    const ev = events.find(item => item.id === selectedEventId);
+    const config = ROLE_CONFIG[roleKey];
+    const volunteer = { name: nameValue, phone: phoneValue };
+
+    if (config.type === 'both_multiple') {
+        ev.roster[roleKey].both.push(volunteer);
+    } else {
+        ev.roster[roleKey][serviceKey] = volunteer;
+    }
+
+    saveEvents();
+    bookingModal.classList.add('hidden');
+    bookingForm.reset();
+    renderCalendar();
+    alert('Thank you! Your availability has been registered.');
+});
+
+function isRosterFull(ev) {
+    return Object.entries(ROLE_CONFIG).every(([key, config]) => {
+        const slot = ev.roster[key];
+        if (config.type === 'split') return slot.service1 && slot.service2;
+        if (config.type === 'both') return slot.both;
+        if (config.type === 'both_multiple') return slot.both && slot.both.length === config.max;
+        return false;
+    });
 }
 
-/* ---- Add a new booking ---- */
-function addBooking() {
-  const name    = document.getElementById('book-name').value.trim();
-  const service = document.getElementById('book-service').value;
-  const notes   = document.getElementById('book-notes').value.trim();
-
-  if (!name)          { showToast('Please enter your name!');        return; }
-  if (!service)       { showToast('Please select a service time!');  return; }
-  if (!selectedDocket){ showToast('Please select a docket!');        return; }
-
-  const booking = {
-    id:       Date.now(),
-    date:     selectedDate,
-    name,
-    service,
-    docket:   selectedDocket,
-    notes,
-    bookedBy: currentUser ? currentUser.name : 'Unknown',
-  };
-
-  bookings.push(booking);
-  saveBookings();
-  renderCalendar();
-  renderAllBookings();
-
-  // Reset form fields
-  document.getElementById('book-name').value    = '';
-  document.getElementById('book-service').value = '';
-  document.getElementById('book-notes').value   = '';
-  document.querySelectorAll('.docket-pill').forEach(p => p.classList.remove('selected-pill'));
-  selectedDocket = null;
-
-  showToast('Booking confirmed!');
+function checkThursdayDeadline() {
+    const currentDay = new Date().getDay(); 
+    if (currentDay >= 4 || currentDay === 0) {
+        const hasOpenSlots = events.some(ev => !isRosterFull(ev));
+        if (hasOpenSlots) urgentBanner.classList.remove('hidden');
+    }
 }
 
-/* ---- Delete a booking by ID ---- */
-function deleteBooking(id) {
-  bookings = bookings.filter(b => b.id !== id);
-  saveBookings();
-  renderCalendar();
-  renderAllBookings();
-  showToast('Booking removed.');
+function saveEvents() {
+    localStorage.setItem('worshipEvents', JSON.stringify(events));
 }
 
-/* ---- Persist to localStorage ---- */
-function saveBookings() {
-  localStorage.setItem('mo_bookings', JSON.stringify(bookings));
+function handleFinalizeAndEmail() {
+    if (events.length === 0) return alert("No service events available.");
+    
+    const ev = events[0]; 
+    let rosterText = `MASTER ROSTER FOR SERVICE: ${ev.date}\n====================================\n\n`;
+
+    Object.entries(ROLE_CONFIG).forEach(([key, config]) => {
+        rosterText += `[${config.name.toUpperCase()}]\n`;
+        const slot = ev.roster[key];
+
+        if (config.type === 'split') {
+            rosterText += `  - 1st Service: ${slot.service1 ? slot.service1.name + ' (' + slot.service1.phone + ')' : 'VACANT'}\n`;
+            rosterText += `  - 2nd Service: ${slot.service2 ? slot.service2.name + ' (' + slot.service2.phone + ')' : 'VACANT'}\n`;
+        } else if (config.type === 'both') {
+            rosterText += `  - Both Services: ${slot.both ? slot.both.name + ' (' + slot.both.phone + ')' : 'VACANT'}\n`;
+        } else if (config.type === 'both_multiple') {
+            const p1 = slot.both[0] ? `${slot.both[0].name} (${slot.both[0].phone})` : 'VACANT';
+            const p2 = slot.both[1] ? `${slot.both[1].name} (${slot.both[1].phone})` : 'VACANT';
+            rosterText += `  - Volunteer 1: ${p1}\n  - Volunteer 2: ${p2}\n`;
+        }
+        rosterText += '\n';
+    });
+
+    if (typeof emailjs !== 'undefined') {
+        emailjs.send("YOUR_SERVICE_ID", "YOUR_TEMPLATE_ID", {
+            to_email: "emmanuellalampaaa@gmail.com",
+            roster_date: ev.date,
+            roster_details: rosterText
+        }).then(() => {
+            alert("Roster finalized and sent to emmanuellalampaaa@gmail.com!");
+        }).catch(() => {
+            openMailtoFallback(ev.date, rosterText);
+        });
+    } else {
+        openMailtoFallback(ev.date, rosterText);
+    }
 }
 
-/* ---- Render upcoming bookings list ---- */
-function renderAllBookings() {
-  const container = document.getElementById('all-bookings-list');
-  const upcoming  = bookings
-    .filter(b => b.date >= todayStr())
-    .sort((a, b) => a.date.localeCompare(b.date));
-
-  const countEl = document.getElementById('booking-count');
-  if (countEl) countEl.textContent = `(${upcoming.length} upcoming)`;
-
-  if (!upcoming.length) {
-    container.innerHTML = '<div class="empty-bookings">No upcoming bookings yet</div>';
-    return;
-  }
-
-  container.innerHTML = upcoming.map(b => {
-    const parts = b.date.split('-');
-    const d     = new Date(parseInt(parts[0]), parseInt(parts[1])-1, parseInt(parts[2]));
-    const df    = d.toLocaleDateString('en-KE', { weekday:'short', day:'numeric', month:'short' });
-
-    return `
-      <div class="booking-item">
-        <div class="booking-info">
-          <h4>${b.name}
-            <span style="color:var(--text-muted);font-weight:400;font-size:13px;">
-              / ${b.service}
-            </span>
-          </h4>
-          <p>${b.notes || 'No notes'}</p>
-        </div>
-        <div class="booking-meta">
-          <div class="booking-date">${df}</div>
-          <div class="docket-badge">${b.docket}</div>
-        </div>
-        <button class="btn-delete" onclick="deleteBooking(${b.id})" title="Remove booking">✕</button>
-      </div>
-    `;
-  }).join('');
+function openMailtoFallback(dateStr, bodyText) {
+    const mailtoUrl = `mailto:emmanuellalampaaa@gmail.com?subject=${encodeURIComponent("Finalized Worship Roster - " + dateStr)}&body=${encodeURIComponent(bodyText)}`;
+    window.location.href = mailtoUrl;
 }
