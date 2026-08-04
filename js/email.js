@@ -24,16 +24,16 @@
    plain-text copy of the same message.
    ------------------------------------------------------ */
 const ROSTER_EMAIL       = "emmanuellalampaaa@gmail.com";
-const EMAILJS_PUBLIC_KEY = "YOUR_PUBLIC_KEY";    // e.g. "AbCdEf123"
-const EMAILJS_SERVICE_ID = "YOUR_SERVICE_ID";    // e.g. "service_abc123"
-const EMAILJS_TEMPLATE_ID = "YOUR_TEMPLATE_ID";  // e.g. "template_xyz789"
+const EMAILJS_PUBLIC_KEY = "ieSV0jy_necloh4kq";    // e.g. "AbCdEf123"
+const EMAILJS_SERVICE_ID = "service_apeheyq";    // e.g. "service_abc123"
+const EMAILJS_TEMPLATE_ID = "template_77mnbi9";  // e.g. "template_xyz789"
 
 /* Brand logo used inside the HTML emails. Email clients cannot load
    local files, so host The_Crew_Logo.jpeg somewhere public (your
    church site, a CDN, or a raw GitHub link) and paste the https URL
    here. Until then, the app uses the local The_Crew_Logo.jpeg file,
    which renders wherever the site files are served from. */
-const CREW_LOGO_URL = "YOUR_LOGO_URL"; // e.g. "https://example.com/images/the-crew-logo.jpeg"
+const CREW_LOGO_URL = "https://i.ibb.co/BH1Ln5Z5/the-crew-logo.jpeg"; // e.g. "https://example.com/images/the-crew-logo.jpeg"
 
 const REMINDER_DAYS_BEFORE = 1; // reminder emails go out 1 day before the service
 
