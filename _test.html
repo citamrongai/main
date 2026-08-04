@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><title>Booking Flow Diagnostic</title></head>
+<body>
+<div id="result"></div>
+<script>
+window.__errors = [];
+window.onerror = function (msg, src, line, col, err) {
+  window.__errors.push(msg + ' @' + (src || '').split('/').pop() + ':' + line);
+  return false;
+};
+window.addEventListener('unhandledrejection', function (e) {
+  window.__errors.push('unhandledrejection: ' + e.reason);
+});
+</script>
+<script src="js/utils.js"></script>
+<script src="js/users.js"></script>
+<script src="js/calendar.js"></script>
+<script src="js/email.js"></script>
+<script src="js/lyrics.js"></script>
+<script>
+function report(label, ok, extra) {
+  var r = document.getElementById('result');
+  r.innerHTML += '<div>' + label + ': ' + (ok ? 'PASS' : 'FAIL') + ' ' + (extra || '') + '</div>';
+}
+
+// Fresh state
+localStorage.removeItem('worshipEvents');
+localStorage.removeItem('mopSession');
+
+// 1) login as volunteer
+var user = loginUser('jane', 'crew123');
+report('login jane', !!user);
+
+// 2) create an event next Saturday
+var sat = new Date();
+sat.setDate(sat.getDate() + ((7 - sat.getDay()) % 7) + 7);
+var dateStr = sat.getFullYear() + '-' + String(sat.getMonth() + 1).padStart(2, '0') + '-' + String(sat.getDate()).padStart(2, '0');
+events = [];
+saveEvents();
+events.push(createEvent(dateStr));
+saveEvents();
+var ev = getEventByDate(dateStr);
+report('event created', !!ev, dateStr);
+
+// 3) render the date panel (real DOM)
+selectedDate = dateStr;
+try {
+  renderDatePanel();
+  report('renderDatePanel() ok', true);
+} catch (e) {
+  report('renderDatePanel() threw', false, e.message + ' | ' + (e.stack || '').split('\n')[1]);
+}
+
+// 4) fill booking form for a 'both' role WITHOUT email
+document.getElementById('booking-event-id').value = ev.id;
+document.getElementById('bk-name').value = 'Jane Doe';
+document.getElementById('bk-phone').value = '0712345678';
+document.getElementById('bk-email').value = '';
+document.getElementById('bk-role').value = 'cam2';
+populateServiceOptions(ev);
+
+var svcWrapHidden = document.getElementById('bk-service-wrap').classList.contains('hidden');
+report('svc-wrap hidden for cam2', svcWrapHidden);
+
+var form = document.getElementById('booking-form');
+report('form.checkValidity()', form.checkValidity());
+var invalid = [];
+form.querySelectorAll(':invalid').forEach(function (el) { invalid.push(el.id); });
+report('invalid fields', invalid.length === 0, invalid.join(','));
+
+// 5) submit like a real click (fires native validation then submit)
+try {
+  form.requestSubmit();
+  report('requestSubmit() did not throw', true);
+} catch (err) {
+  report('requestSubmit() threw', false, err.message);
+}
+
+// 6) inspect result
+var after = getEventByDate(dateStr);
+var filled = after.roster.cam2 && after.roster.cam2.both ? after.roster.cam2.both.name : null;
+report('cam2 slot filled', filled === 'Jane Doe', 'got: ' + filled);
+
+// 7) split role: photography requires service selection
+document.getElementById('bk-name').value = 'David Otieno';
+document.getElementById('bk-phone').value = '0723456789';
+document.getElementById('bk-email').value = '';
+document.getElementById('bk-role').value = 'photography';
+populateServiceOptions(ev);
+var svcWrapVisible = !document.getElementById('bk-service-wrap').classList.contains('hidden');
+report('svc-wrap visible for photography', svcWrapVisible);
+// try submitting WITHOUT picking a service -> should be blocked by native validation
+document.getElementById('bk-service').value = '';
+form.requestSubmit();
+var photoEmpty = getEventByDate(dateStr).roster.photography.service1 === null;
+report('photography blocked w/o service', photoEmpty);
+// now pick 1st service
+document.getElementById('bk-service').value = 'service1';
+form.requestSubmit();
+var photoFilled = (getEventByDate(dateStr).roster.photography.service1 || {}).name;
+report('photography filled w/ service', photoFilled === 'David Otieno', 'got: ' + photoFilled);
+
+report('JS errors', window.__errors.length === 0, window.__errors.join(' | '));
+</script>
+</body>
+</html>

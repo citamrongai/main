@@ -18,19 +18,12 @@
             (variables used: to_email, subject, roster_html — the
             app sends a complete branded HTML email: black
             background, The Crew logo, then the message)
-         3. Put your keys in js/calendar.js (EMAILJS_*) and below
-            (emailjs.init). Host The_Crew_Logo.jpeg at a public URL
-            and set CREW_LOGO_URL in js/calendar.js.
+         3. Put your EmailJS keys and CREW_LOGO_URL in js/email.js
+            (emailjs.init runs automatically from there). Host
+            The_Crew_Logo.jpeg at a public URL and set CREW_LOGO_URL
+            so mail clients can render it.
          Until configured, the app falls back to a mailto: link. -->
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
-    <script type="text/javascript">
-        (function () {
-            var EMAILJS_PUBLIC_KEY = "YOUR_PUBLIC_KEY"; // e.g. "AbCdEf123"
-            if (EMAILJS_PUBLIC_KEY && EMAILJS_PUBLIC_KEY.indexOf('YOUR_') !== 0 && typeof emailjs !== 'undefined') {
-                emailjs.init(EMAILJS_PUBLIC_KEY);
-            }
-        })();
-    </script>
 </head>
 <body>
 <div id="app">
@@ -158,11 +151,11 @@
                             </div>
 
                             <div class="form-row">
-                                <label for="bk-email">Email (for service reminders)</label>
-                                <input type="email" id="bk-email" placeholder="you@example.com" required autocomplete="email"
+                                <label for="bk-email">Email (optional — for service reminders)</label>
+                                <input type="email" id="bk-email" placeholder="you@example.com" autocomplete="email"
                                        oninput="document.getElementById('booking-error-email').classList.add('hidden')">
                                 <small id="booking-error-email" class="error-msg hidden">
-                                    Please enter a valid email address — we'll send your service reminder there.
+                                    That email address doesn't look valid — it's only needed if you'd like service reminders.
                                 </small>
                             </div>
 
@@ -298,6 +291,7 @@ great is thy faithfulness lord unto me"></textarea>
 <script src="js/utils.js"></script>
 <script src="js/users.js"></script>
 <script src="js/calendar.js"></script>
+<script src="js/email.js"></script>
 <script src="js/lyrics.js"></script>
 
 <script>
