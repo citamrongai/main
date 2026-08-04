@@ -4,123 +4,321 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Media Operations Portal</title>
-    
-    <!-- Design System Stylesheets -->
+
+    <!-- Design system (strict Black & White, CSS-variable driven) -->
     <link rel="stylesheet" href="css/variables.css">
     <link rel="stylesheet" href="css/layout.css">
-    
-    <style>
-        /* Embedded Frame Styling for Seamless Navigation */
-        body, html {
-            margin: 0;
-            padding: 0;
-            height: 100%;
-            display: flex;
-            flex-direction: column;
-            background-color: var(--bg-color, #ffffff);
-            color: var(--text-color, #000000);
-            font-family: 'Helvetica Neue', Arial, sans-serif;
-        }
+    <link rel="stylesheet" href="css/calendar.css">
+    <link rel="stylesheet" href="css/lyrics.css">
 
-        .portal-navbar {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 15px 30px;
-            background-color: var(--bg-color, #ffffff);
-            border-bottom: 2px solid var(--border-color, #000000);
-        }
-
-        .portal-brand {
-            font-size: 1.25rem;
-            font-weight: bold;
-            letter-spacing: 1px;
-            text-transform: uppercase;
-        }
-
-        .portal-nav-links {
-            display: flex;
-            gap: 10px;
-        }
-
-        .nav-btn {
-            background: transparent;
-            color: var(--text-color, #000000);
-            border: 2px solid transparent;
-            padding: 8px 16px;
-            font-weight: bold;
-            font-size: 0.9rem;
-            cursor: pointer;
-            text-transform: uppercase;
-            transition: all 0.2s ease;
-        }
-
-        .nav-btn:hover {
-            border-color: var(--border-color, #000000);
-        }
-
-        .nav-btn.active {
-            background-color: var(--text-color, #000000);
-            color: var(--bg-color, #ffffff);
-            border-color: var(--border-color, #000000);
-        }
-
-        .content-container {
-            flex: 1;
-            width: 100%;
-            height: calc(100vh - 70px);
-            border: none;
-        }
-
-        #main-frame {
-            width: 100%;
-            height: 100%;
-            border: none;
-        }
-    </style>
+    <!-- EmailJS SDK (for roster dispatch + service reminders)
+         1. Create a free account at emailjs.com
+         2. Add a service + an email template whose ENTIRE body is:
+            {{{roster_html}}}
+            (variables used: to_email, subject, roster_html — the
+            app sends a complete branded HTML email: black
+            background, The Crew logo, then the message)
+         3. Put your keys in js/calendar.js (EMAILJS_*) and below
+            (emailjs.init). Host The_Crew_Logo.jpeg at a public URL
+            and set CREW_LOGO_URL in js/calendar.js.
+         Until configured, the app falls back to a mailto: link. -->
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+    <script type="text/javascript">
+        (function () {
+            var EMAILJS_PUBLIC_KEY = "YOUR_PUBLIC_KEY"; // e.g. "AbCdEf123"
+            if (EMAILJS_PUBLIC_KEY && EMAILJS_PUBLIC_KEY.indexOf('YOUR_') !== 0 && typeof emailjs !== 'undefined') {
+                emailjs.init(EMAILJS_PUBLIC_KEY);
+            }
+        })();
+    </script>
 </head>
 <body>
+<div id="app">
 
-    <!-- Main App Navigation Bar -->
-    <header class="portal-navbar">
-        <div class="portal-brand">Media Operations Portal</div>
-        <nav class="portal-nav-links">
-            <!-- Points to calendar.html by default -->
-            <button class="nav-btn active" data-page="pages/calendar.html">Booking Calendar</button>
-            <button class="nav-btn" data-page="pages/lyrics.html">Lyrics</button>
-        </nav>
+    <!-- ================= Header / auth ================= -->
+    <header>
+        <a class="header-logo" href="#" onclick="return false">
+            <img class="header-logo-img" src="The_Crew_Logo.jpeg" alt="The Crew logo">
+            <div class="header-logo-text">
+                <span>Media Operations Portal</span>
+                <span>Worship Media Crew</span>
+            </div>
+        </a>
+
+        <div class="header-verse" id="verse-ticker"></div>
+
+        <div class="header-right">
+            <span id="user-badge" class="user-badge hidden"></span>
+            <button id="login-btn" class="btn-logout">Login</button>
+            <button id="logout-btn" class="btn-logout hidden">Logout</button>
+        </div>
     </header>
 
-    <!-- Main Content View Area -->
-    <main class="content-container">
-        <!-- Defaults directly to calendar.html on load -->
-        <iframe id="main-frame" src="pages/calendar.html" title="Portal View"></iframe>
-    </main>
+    <!-- ================= Tabs ================= -->
+    <nav>
+        <button class="nav-tab active" onclick="switchTab('calendar', this)">Booking Calendar</button>
+        <button class="nav-tab" onclick="switchTab('lyrics', this)">Lyrics Formatter</button>
+    </nav>
 
-    <!-- Core App Scripts -->
-    <script src="js/utils.js"></script>
-    <script src="js/auth.js"></script>
+    <!-- ==========================================================
+         TAB 1 — BOOKING CALENDAR & ROSTER
+         ========================================================== -->
+    <div id="tab-calendar" class="tab-content active">
+        <div class="content">
 
-    <script>
-        // Smooth Tab Switching Script
-        document.addEventListener('DOMContentLoaded', () => {
-            const navButtons = document.querySelectorAll('.nav-btn');
-            const mainFrame = document.getElementById('main-frame');
+            <!-- "Urgent Fill Needed" banner — shown Thu/Fri/Sat when an
+                 upcoming weekend roster still has open slots -->
+            <div id="urgent-banner" class="urgent-banner hidden">
+                <div class="urgent-mark">!</div>
+                <div class="urgent-body">
+                    <div class="urgent-title">URGENT FILL NEEDED</div>
+                    <div id="urgent-text" class="urgent-text"></div>
+                </div>
+            </div>
 
-            navButtons.forEach(button => {
-                button.addEventListener('click', () => {
-                    // Update active button state
-                    navButtons.forEach(btn => btn.classList.remove('active'));
-                    button.classList.add('active');
+            <div class="calendar-layout">
 
-                    // Load the requested sub-page into the main iframe
-                    const pageUrl = button.getAttribute('data-page');
-                    if (pageUrl) {
-                        mainFrame.src = pageUrl;
-                    }
-                });
-            });
-        });
-    </script>
+                <!-- LEFT — Interactive month calendar -->
+                <div class="cal-card">
+                    <div class="cal-header">
+                        <button class="cal-nav" id="prev-month" title="Previous month">&#8249;</button>
+                        <div class="cal-month" id="month-label"></div>
+                        <button class="cal-nav" id="next-month" title="Next month">&#8250;</button>
+                    </div>
+                    <div id="calendar-grid" class="cal-grid"></div>
+
+                    <div id="admin-controls" class="admin-cal-controls hidden">
+                        <button id="admin-add-event-btn" class="btn-primary" style="width:100%;">+ Add Service Event</button>
+                    </div>
+                </div>
+
+                <!-- RIGHT — selected date: roster + booking -->
+                <div>
+                    <div id="date-info-bar" class="date-info-bar hidden"></div>
+
+                    <div id="empty-panel" class="no-date-msg">
+                        Select a date on the calendar to view its roster.<br>
+                        Logged-in volunteers can register availability on upcoming services.
+                    </div>
+
+                    <div id="no-event-panel" class="no-date-msg hidden">
+                        <strong>No service scheduled here yet.</strong><br>
+                        <span id="no-event-user-msg"></span>
+                    </div>
+
+                    <!-- Roster panel -->
+                    <div id="roster-panel" class="roster-panel hidden">
+                        <div class="roster-head">
+                            <div>
+                                <div class="panel-label">Master Roster</div>
+                                <div class="roster-progress-row">
+                                    <div class="progress-track"><div id="progress-fill" class="progress-fill" style="width:0%"></div></div>
+                                    <span id="roster-percent" class="roster-percent">0%</span>
+                                </div>
+                                <div class="roster-meta">
+                                    <span id="progress-label">0 / 0 core slots filled</span>
+                                    <span id="roster-status-text" class="roster-status"></span>
+                                    <span id="deadline-chip" class="deadline-chip"></span>
+                                    <span id="reminder-chip" class="reminder-chip"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="roster-slots" class="roster-slots-wrap"></div>
+
+                        <div id="roster-admin-bar" class="roster-admin-bar hidden">
+                            <button id="finalize-btn" class="btn-primary">Finalize &amp; Send Roster</button>
+                            <button id="send-reminders-btn" class="btn-secondary">Send Reminder Emails</button>
+                            <button id="copy-roster-btn" class="btn-secondary">Copy Roster</button>
+                            <button id="edit-event-btn" class="btn-secondary">Edit Date</button>
+                            <button id="delete-event-btn" class="btn-secondary btn-danger-outline">Delete Event</button>
+                        </div>
+                    </div>
+
+                    <!-- Booking panel (normal users) -->
+                    <div id="booking-panel" class="booking-form hidden">
+                        <div class="panel-label" id="booking-panel-title">Register your availability</div>
+                        <div id="booking-panel-sub" class="booking-panel-sub"></div>
+
+                        <form id="booking-form">
+                            <input type="hidden" id="booking-event-id">
+
+                            <div class="form-row">
+                                <label for="bk-name">Full Name</label>
+                                <input type="text" id="bk-name" placeholder="e.g. Jane Doe" required autocomplete="name">
+                            </div>
+
+                            <div class="form-row">
+                                <label for="bk-phone">Phone Number (10 digits — starts 07 or 01)</label>
+                                <input type="tel" id="bk-phone" placeholder="0712345678" required autocomplete="tel"
+                                       oninput="document.getElementById('booking-error-phone').classList.add('hidden')">
+                                <small id="booking-error-phone" class="error-msg hidden">
+                                    Invalid phone number — must be exactly 10 digits and start with 07 or 01.
+                                </small>
+                            </div>
+
+                            <div class="form-row">
+                                <label for="bk-email">Email (for service reminders)</label>
+                                <input type="email" id="bk-email" placeholder="you@example.com" required autocomplete="email"
+                                       oninput="document.getElementById('booking-error-email').classList.add('hidden')">
+                                <small id="booking-error-email" class="error-msg hidden">
+                                    Please enter a valid email address — we'll send your service reminder there.
+                                </small>
+                            </div>
+
+                            <div class="form-row">
+                                <label for="bk-role">Serving Role</label>
+                                <select id="bk-role" required>
+                                    <option value="">— Select a role —</option>
+                                </select>
+                                <small class="field-hint">Roles shown as FULL are disabled — their slots are already taken.</small>
+                            </div>
+
+                            <div class="form-row" id="bk-service-wrap">
+                                <label for="bk-service">Service</label>
+                                <select id="bk-service" required>
+                                    <option value="">— Select service —</option>
+                                </select>
+                                <small class="field-hint">Split roles need one volunteer per service (1st &amp; 2nd).</small>
+                            </div>
+
+                            <div id="bk-service-note" class="service-note hidden"></div>
+
+                            <small id="booking-error-role" class="error-msg hidden">Please complete the role details.</small>
+
+                            <button type="submit" class="btn-book">Confirm Slot</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==========================================================
+         TAB 2 — LYRICS FORMATTER
+         ========================================================== -->
+    <div id="tab-lyrics" class="tab-content">
+        <div class="content">
+            <div class="section-header">
+                <div class="section-title">Lyrics Formatter</div>
+                <div class="section-sub">Format raw lyrics for worship display</div>
+                <div class="accent-line"></div>
+            </div>
+
+            <div class="format-controls">
+                <button class="ctrl-btn active-ctrl" onclick="toggleCtrl('sections', this)" title="Detect labels like Verse, Chorus, Bridge automatically">Auto-detect Sections</button>
+                <button class="ctrl-btn active-ctrl" onclick="toggleCtrl('slides', this)" title="Break content into slides of max 4 lines">Split into Slides</button>
+                <button class="ctrl-btn active-ctrl" onclick="toggleCtrl('caps', this)" title="Capitalise the first letter of every line">Capitalize Lines</button>
+                <button class="ctrl-btn" onclick="toggleCtrl('clean', this)" title="Remove commas, full stops, quotes, etc.">Remove Punctuation</button>
+                <button class="ctrl-btn" onclick="toggleCtrl('numbers', this)" title="Add SLIDE 1, SLIDE 2 … labels">Show Slide Numbers</button>
+            </div>
+
+            <div class="formatter-grid">
+                <div class="panel">
+                    <div class="panel-label">Raw Input</div>
+                    <textarea id="lyrics-input" class="lyrics-textarea" placeholder="Paste your raw song lyrics here...
+
+Example:
+verse 1
+great is thy faithfulness
+great is thy faithfulness
+morning by morning new mercies i see
+
+chorus
+great is thy faithfulness lord unto me"></textarea>
+                    <div class="format-actions">
+                        <button class="btn-primary" onclick="formatLyrics()">Format Lyrics</button>
+                        <button class="btn-secondary" onclick="clearAll()">Clear</button>
+                    </div>
+                </div>
+
+                <div class="panel">
+                    <div class="panel-label">Formatted Output</div>
+                    <div id="lyrics-output" class="output-area">
+                        <span style="color:var(--text-muted);font-size:12px;letter-spacing:2px;">Formatted lyrics will appear here...</span>
+                    </div>
+                    <div class="format-actions">
+                        <button class="btn-secondary" onclick="copyOutput()">Copy Output</button>
+                        <button class="btn-secondary" onclick="downloadOutput()">Download .txt</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ==========================================================
+     MODALS
+     ========================================================== -->
+
+<!-- Login (users + admin — isAdmin flag decides the view) -->
+<div id="user-login-modal" class="modal hidden">
+    <div class="modal-content">
+        <span class="close-btn" id="close-login-modal">&times;</span>
+        <div class="panel-label">Sign In</div>
+        <form id="login-form">
+            <div class="form-row">
+                <label for="login-username">Username</label>
+                <input type="text" id="login-username" required autocomplete="username">
+            </div>
+            <div class="form-row">
+                <label for="login-password">Password</label>
+                <input type="password" id="login-password" required autocomplete="current-password">
+            </div>
+            <small id="login-error" class="error-msg hidden">Invalid username or password.</small>
+            <button type="submit" class="btn-primary" style="width:100%;margin-top:6px;">Sign In</button>
+        </form>
+        <div class="demo-hint">
+            <strong>Demo accounts</strong>
+            <span>admin / P@sscode13 &nbsp;·&nbsp; ADMIN</span>
+            <span>jane / crew123 &nbsp;·&nbsp; VOLUNTEER</span>
+            <span>david / crew123 &nbsp;·&nbsp; VOLUNTEER</span>
+            <span>faith / crew123 &nbsp;·&nbsp; VOLUNTEER</span>
+        </div>
+    </div>
+</div>
+
+<!-- Add / edit service event (admin only) -->
+<div id="event-modal" class="modal hidden">
+    <div class="modal-content">
+        <span class="close-btn" id="close-event-modal">&times;</span>
+        <div class="panel-label" id="event-modal-title">Add Service Event</div>
+        <form id="event-form">
+            <div class="form-row">
+                <label for="event-date-input">Service Date</label>
+                <input type="date" id="event-date-input" required>
+            </div>
+            <small id="event-date-error" class="error-msg hidden"></small>
+            <button type="submit" class="btn-primary" style="width:100%;margin-top:6px;">Save Event</button>
+        </form>
+    </div>
+</div>
+
+<!-- Core App Scripts -->
+<script src="js/utils.js"></script>
+<script src="js/users.js"></script>
+<script src="js/calendar.js"></script>
+<script src="js/lyrics.js"></script>
+
+<script>
+    // Small rotating verse in the header
+    (function () {
+        const verses = [
+            '"Whatever you do, work at it with all your heart, as working for the Lord." — Colossians 3:23',
+            '"Serve one another humbly in love." — Galatians 5:13',
+            '"Let everything be done in love." — 1 Corinthians 16:14',
+            '"For where two or three gather in my name, there am I with them." — Matthew 18:20'
+        ];
+        let i = 0;
+        const el = document.getElementById('verse-ticker');
+        el.innerHTML = verses[0];
+        setInterval(() => {
+            i = (i + 1) % verses.length;
+            el.style.opacity = 0;
+            setTimeout(() => { el.innerHTML = verses[i]; el.style.opacity = 1; }, 300);
+        }, 7000);
+        el.style.transition = 'opacity 0.3s ease';
+    })();
+</script>
 </body>
 </html>

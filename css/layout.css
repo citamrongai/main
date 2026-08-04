@@ -1,6 +1,6 @@
 /* layout.css — Header, nav, tab shell — Black & White theme */
 
-#app { display: none; min-height: 100vh; }
+#app { display: block; min-height: 100vh; }
 
 header { position: sticky; top: 0; z-index: 50; background: rgba(10,10,10,0.95); backdrop-filter: blur(12px); border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; padding: 0 32px; height: 64px; }
 
@@ -13,6 +13,7 @@ header { position: sticky; top: 0; z-index: 50; background: rgba(10,10,10,0.95);
 /* Verse ticker in header */
 .header-verse { font-family: var(--font-body); font-size: 12px; font-style: italic; color: var(--text-muted); letter-spacing: 1px; flex: 1; text-align: center; padding: 0 20px; }
 .header-verse strong { color: var(--accent-dim); font-style: normal; }
+.header-right .btn-logout.active-login { border-color: var(--accent); color: var(--accent); }
 
 .header-right { display: flex; align-items: center; gap: 16px; }
 .user-badge { font-size: 12px; letter-spacing: 2px; color: var(--text-muted); text-transform: uppercase; white-space: nowrap; }

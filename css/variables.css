@@ -7,6 +7,12 @@
 @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Rajdhani:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
 
 :root {
+  /* ---- Core theme tokens (spec: easy to re-theme) ---- */
+  --bg-color:      #0A0A0A;
+  --text-color:    #F5F5F5;
+  --border-color:  rgba(255,255,255,0.12);
+
+  /* ---- Black & White palette ---- */
   --accent:        #FFFFFF;
   --accent-dim:    rgba(255,255,255,0.6);
   --accent-muted:  rgba(255,255,255,0.15);
@@ -20,6 +26,10 @@
   --text-muted:    #888888;
   --border:        rgba(255,255,255,0.12);
   --border-bright: rgba(255,255,255,0.35);
+
+  /* Single restrained error accent (kept minimal for the B&W system) */
+  --danger:        #ff6b6b;
+  --danger-dim:    rgba(255,107,107,0.12);
 
   --font-display: 'Bebas Neue', sans-serif;
   --font-body:    'Rajdhani', sans-serif;
