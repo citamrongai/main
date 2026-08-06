@@ -29,7 +29,6 @@ const ROLE_CONFIG = {
 
 const EVENTS_KEY = 'worshipEvents';
 const PHONE_REGEX = /^(07|01)\d{8}$/;          // exactly 10 digits, starts 07 or 01
-const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/; // simple email format check (field is optional)
 
 /* ---------------- State ---------------- */
 let events = loadEvents();
@@ -387,7 +386,7 @@ function slotChip(ev, roleKey, service, user, socialIdx) {
   if (volunteer) {
     const info = document.createElement('div');
     info.className = 'slot-chip-filled';
-    info.innerHTML = `<strong>${escapeHtml(volunteer.name)}</strong><span>${escapeHtml(volunteer.phone)}</span>${volunteer.email ? `<span class="slot-chip-mail">${escapeHtml(volunteer.email)}</span>` : ''}`;
+    info.innerHTML = `<strong>${escapeHtml(volunteer.name)}</strong><span>${escapeHtml(volunteer.phone)}</span>`;
     chip.appendChild(info);
 
     if (user && (user.isAdmin || (volunteer.username && volunteer.username === user.username))) {
@@ -432,7 +431,6 @@ function renderBookingForm(ev) {
   const form = els.bookingForm;
   form.reset();
   $('booking-error-phone').classList.add('hidden');
-  $('booking-error-email').classList.add('hidden');
   $('booking-error-role').classList.add('hidden');
 
   // Guard rails
@@ -469,8 +467,6 @@ function renderBookingForm(ev) {
   $('bk-name').value = user.name || '';
   $('bk-phone').value = '';
   $('bk-phone').placeholder = '07XXXXXXXX or 01XXXXXXXX';
-  $('bk-email').value = '';
-  $('bk-email').placeholder = 'you@example.com (optional)';
 
   // Role select — only roles with an open slot are selectable; filled ones show as disabled
   const roleSelect = $('bk-role');
@@ -538,11 +534,9 @@ function handleBookingSubmit(e) {
 
   const name = $('bk-name').value.trim();
   const phone = $('bk-phone').value.trim();
-  const email = $('bk-email').value.trim();
   const roleKey = $('bk-role').value;
   const cfg = ROLE_CONFIG[roleKey];
   const errPhone = $('booking-error-phone');
-  const errEmail = $('booking-error-email');
   const errRole = $('booking-error-role');
   const ev = evForBooking();
   if (!ev) return; // defensive: event vanished
@@ -557,15 +551,7 @@ function handleBookingSubmit(e) {
     errPhone.classList.add('hidden');
   }
 
-  // 2) Email — optional; only validated when provided
-  if (email && !EMAIL_REGEX.test(email)) {
-    errEmail.classList.remove('hidden');
-    valid = false;
-  } else {
-    errEmail.classList.add('hidden');
-  }
-
-  // 3) Role + service
+  // 2) Role + service
   let service = null;
   if (!roleKey) {
     errRole.classList.remove('hidden');
@@ -589,7 +575,7 @@ function handleBookingSubmit(e) {
 
   if (!valid || !roleKey) return;
   const user = getCurrentUser();
-  const volunteer = { name, phone, email, username: user ? user.username : null };
+  const volunteer = { name, phone, username: user ? user.username : null };
 
   if (cfg.type === 'split') {
     ev.roster[roleKey][service] = volunteer;
@@ -718,15 +704,15 @@ function buildRosterText(ev) {
     if (cfg.type === 'split') {
       cfg.services.forEach(service => {
         const v = ev.roster[roleKey][service];
-        out += `  ${service === 'service1' ? '1st Service' : '2nd Service'} : ${v ? v.name + ' — ' + v.phone + (v.email ? ' (' + v.email + ')' : '') : 'OPEN'}\n`;
+        out += `  ${service === 'service1' ? '1st Service' : '2nd Service'} : ${v ? v.name + ' — ' + v.phone : 'OPEN'}\n`;
       });
     } else if (cfg.type === 'both') {
       const v = ev.roster[roleKey].both;
-      out += `  Both Services : ${v ? v.name + ' — ' + v.phone + (v.email ? ' (' + v.email + ')' : '') : 'OPEN'}\n`;
+      out += `  Both Services : ${v ? v.name + ' — ' + v.phone : 'OPEN'}\n`;
     } else {
       for (let i = 0; i < cfg.max; i++) {
         const v = ev.roster[roleKey].both[i];
-        out += `  Member ${i + 1}      : ${v ? v.name + ' — ' + v.phone + (v.email ? ' (' + v.email + ')' : '') : 'OPEN'}\n`;
+        out += `  Member ${i + 1}      : ${v ? v.name + ' — ' + v.phone : 'OPEN'}\n`;
       }
     }
     out += '\n';

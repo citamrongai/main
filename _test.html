@@ -56,7 +56,6 @@ try {
 document.getElementById('booking-event-id').value = ev.id;
 document.getElementById('bk-name').value = 'Jane Doe';
 document.getElementById('bk-phone').value = '0712345678';
-document.getElementById('bk-email').value = '';
 document.getElementById('bk-role').value = 'cam2';
 populateServiceOptions(ev);
 
@@ -85,7 +84,6 @@ report('cam2 slot filled', filled === 'Jane Doe', 'got: ' + filled);
 // 7) split role: photography requires service selection
 document.getElementById('bk-name').value = 'David Otieno';
 document.getElementById('bk-phone').value = '0723456789';
-document.getElementById('bk-email').value = '';
 document.getElementById('bk-role').value = 'photography';
 populateServiceOptions(ev);
 var svcWrapVisible = !document.getElementById('bk-service-wrap').classList.contains('hidden');
