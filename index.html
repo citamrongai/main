@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="css/calendar.css">
     <link rel="stylesheet" href="css/lyrics.css">
 
-    <!-- EmailJS SDK (for roster dispatch + service reminders)
+    <!-- EmailJS SDK (for roster dispatch)
          1. Create a free account at emailjs.com
          2. Add a service + an email template whose ENTIRE body is:
             {{{roster_html}}}
@@ -111,7 +111,6 @@
                                     <span id="progress-label">0 / 0 core slots filled</span>
                                     <span id="roster-status-text" class="roster-status"></span>
                                     <span id="deadline-chip" class="deadline-chip"></span>
-                                    <span id="reminder-chip" class="reminder-chip"></span>
                                 </div>
                             </div>
                         </div>
@@ -121,7 +120,6 @@
                         <div id="roster-admin-bar" class="roster-admin-bar hidden">
                             <button id="preview-email-btn" class="btn-secondary" title="See exactly what the receiver will get">Preview Email</button>
                             <button id="finalize-btn" class="btn-primary">Finalize &amp; Send Roster</button>
-                            <button id="send-reminders-btn" class="btn-secondary">Send Reminder Emails</button>
                             <button id="copy-roster-btn" class="btn-secondary">Copy Roster</button>
                             <button id="edit-event-btn" class="btn-secondary">Edit Date</button>
                             <button id="delete-event-btn" class="btn-secondary btn-danger-outline">Delete Event</button>
@@ -151,11 +149,11 @@
                             </div>
 
                             <div class="form-row">
-                                <label for="bk-email">Email (optional — for service reminders)</label>
+                                <label for="bk-email">Email (optional)</label>
                                 <input type="email" id="bk-email" placeholder="you@example.com" autocomplete="email"
                                        oninput="document.getElementById('booking-error-email').classList.add('hidden')">
                                 <small id="booking-error-email" class="error-msg hidden">
-                                    That email address doesn't look valid — it's only needed if you'd like service reminders.
+                                    That email address doesn't look valid.
                                 </small>
                             </div>
 

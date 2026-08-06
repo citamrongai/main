@@ -29,7 +29,14 @@ function toggleCtrl(key, btn) {
 function detectSection(line) {
   const lower = line.trim().toLowerCase();
   for (const kw of SECTION_KEYWORDS) {
-    if (lower.startsWith(kw)) return line.trim().toUpperCase();
+    if (!lower.startsWith(kw)) continue;
+    // Only treat it as a section label when the keyword ends at a word
+    // boundary ("verse 1", "verse1", "chorus") — not inside a word
+    // ("verses", "introduction").
+    const rest = lower.slice(kw.length);
+    if (rest === '' || /\s/.test(rest[0]) || /[0-9]/.test(rest[0]) || rest[0] === '.') {
+      return line.trim().toUpperCase();
+    }
   }
   return null;
 }
@@ -101,9 +108,9 @@ function formatLyrics() {
       html += `<div class="slide-num">SLIDE ${idx + 1}</div>`;
     }
     if (slide.section) {
-      html += `<div class="section-tag">${slide.section}</div>`;
+      html += `<div class="section-tag">${escapeHtml(slide.section)}</div>`;
     }
-    html += slide.lines.join('\n');
+    html += slide.lines.map(line => escapeHtml(line)).join('\n');
     div.innerHTML = html + '<br>';
     out.appendChild(div);
   });

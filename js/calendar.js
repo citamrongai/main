@@ -115,9 +115,11 @@ function seedSampleEvents() {
   if (localStorage.getItem(EVENTS_KEY) !== null) return;
   const today = new Date();
   const samples = [];
+  let daysUntilSat = (6 - today.getDay() + 7) % 7;
+  if (daysUntilSat === 0) daysUntilSat = 7; // today is Saturday → next Saturday
   for (let i = 0; i < 2; i++) {
     const d = new Date(today);
-    d.setDate(today.getDate() + ((7 - today.getDay()) % 7) + 1 + i * 7); // this Sat, next Sat
+    d.setDate(today.getDate() + daysUntilSat + i * 7); // this Sat, next Sat
     samples.push(createEvent(toDateStr(d)));
   }
   if (samples.length) { events = samples; saveEvents(); }
@@ -248,7 +250,6 @@ function renderCalendar() {
     els.calendarGrid.appendChild(cell);
   }
   updateUrgentBanner();
-  checkRemindersDue();
   renderDatePanel();
 }
 
@@ -308,11 +309,6 @@ function renderRoster(ev) {
   $('deadline-chip').textContent = 'Finalize by ' + deadlineLabel(ev.date);
   $('deadline-chip').className = 'deadline-chip ' + (isPastDeadline(ev.date) ? 'deadline-passed' : '');
 
-  // Reminder chip
-  const remChip = $('reminder-chip');
-  remChip.textContent = reminderStatusLabel(ev);
-  remChip.className = 'reminder-chip' + (reminderDueFor(ev) && !ev.remindersSentAt ? ' reminder-due' : '');
-
   // Slot grid
   const slotGrid = $('roster-slots');
   slotGrid.innerHTML = '';
@@ -350,9 +346,6 @@ function renderRoster(ev) {
     adminBar.classList.remove('hidden');
     $('finalize-btn').disabled = ev.finalized;
     $('finalize-btn').textContent = ev.finalized ? 'Roster Already Sent' : 'Finalize & Send Roster';
-    const remBtn = $('send-reminders-btn');
-    remBtn.disabled = reminderRecipients(ev).length === 0;
-    remBtn.title = remBtn.disabled ? 'No volunteers with an email to remind yet' : 'Email every booked volunteer + the admin';
     $('edit-event-btn').onclick = () => openEventModal(ev);
     $('delete-event-btn').onclick = () => {
       if (confirm(`Delete the service on ${formatDateLong(ev.date)} and its roster?`)) {
@@ -364,7 +357,6 @@ function renderRoster(ev) {
     };
     $('preview-email-btn').onclick = () => openEmailPreview(ev);
     $('finalize-btn').onclick = () => finalizeAndEmail(ev);
-    $('send-reminders-btn').onclick = () => sendReminders(ev, false);
     $('copy-roster-btn').onclick = () => {
       navigator.clipboard.writeText(buildRosterText(ev))
         .then(() => showToast('Roster copied to clipboard'))
@@ -565,7 +557,7 @@ function handleBookingSubmit(e) {
     errPhone.classList.add('hidden');
   }
 
-  // 2) Email — optional (for service reminders); only validated when provided
+  // 2) Email — optional; only validated when provided
   if (email && !EMAIL_REGEX.test(email)) {
     errEmail.classList.remove('hidden');
     valid = false;
@@ -602,6 +594,7 @@ function handleBookingSubmit(e) {
   if (cfg.type === 'split') {
     ev.roster[roleKey][service] = volunteer;
   } else if (cfg.type === 'both') {
+    if (!isSlotOpen(ev, roleKey)) { showToast('Sorry — all slots for this role just filled.'); renderCalendar(); return; }
     ev.roster[roleKey].both = volunteer;
   } else {
     if (!isSlotOpen(ev, roleKey)) { showToast('Sorry — all slots for this role just filled.'); renderCalendar(); return; }
@@ -614,7 +607,7 @@ function handleBookingSubmit(e) {
 
   // 3) Auto-dispatch when the roster hits 100%
   if (isRosterFull(ev) && !ev.finalized) {
-    finalizeAndEmail(ev);
+    finalizeAndEmail(ev, true); // auto → never pops the mail client on the volunteer's machine
   }
 }
 
@@ -778,14 +771,11 @@ function initCalendar() {
   seedSampleEvents();
 
   // Month navigation
-  $('prev-month').addEventListener('click', () => { currentMonth.setMonth(currentMonth.getMonth() - 1); renderCalendar(); });
-  $('next-month').addEventListener('click', () => { currentMonth.setMonth(currentMonth.getMonth() + 1); renderCalendar(); });
+  $('prev-month').addEventListener('click', () => { currentMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1, 1); renderCalendar(); });
+  $('next-month').addEventListener('click', () => { currentMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 1); renderCalendar(); });
 
   // Admin add event
   $('admin-add-event-btn').addEventListener('click', () => openEventModal(null));
-
-  // Auto-check reminders while the app is open (every 5 minutes)
-  setInterval(checkRemindersDue, 5 * 60 * 1000);
 
   // Modals
   $('close-login-modal').addEventListener('click', () => els.userModal.classList.add('hidden'));
