@@ -18,10 +18,9 @@
             (variables used: to_email, subject, roster_html — the
             app sends a complete branded HTML email: black
             background, The Crew logo, then the message)
-         3. Put your EmailJS keys and CREW_LOGO_URL in js/email.js
-            (emailjs.init runs automatically from there). Host
-            The_Crew_Logo.jpeg at a public URL and set CREW_LOGO_URL
-            so mail clients can render it.
+         3. Put your EmailJS keys in js/email.js (emailjs.init runs
+            automatically from there). The Crew logo is hosted on ibb.co
+            (CREW_LOGO_URL) so mail clients can render it.
          Until configured, the app falls back to a mailto: link. -->
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
 </head>
@@ -31,7 +30,7 @@
     <!-- ================= Header / auth ================= -->
     <header>
         <a class="header-logo" href="#" onclick="return false">
-            <img class="header-logo-img" src="The_Crew_Logo.jpeg" alt="The Crew logo">
+            <img class="header-logo-img" src="https://i.ibb.co/BH1Ln5Z5/the-crew-logo.jpeg" alt="The Crew logo">
             <div class="header-logo-text">
                 <span>Media Operations Portal</span>
                 <span>Worship Media Crew</span>
@@ -120,6 +119,7 @@
                         <div id="roster-slots" class="roster-slots-wrap"></div>
 
                         <div id="roster-admin-bar" class="roster-admin-bar hidden">
+                            <button id="preview-email-btn" class="btn-secondary" title="See exactly what the receiver will get">Preview Email</button>
                             <button id="finalize-btn" class="btn-primary">Finalize &amp; Send Roster</button>
                             <button id="send-reminders-btn" class="btn-secondary">Send Reminder Emails</button>
                             <button id="copy-roster-btn" class="btn-secondary">Copy Roster</button>
@@ -284,6 +284,22 @@ great is thy faithfulness lord unto me"></textarea>
             <small id="event-date-error" class="error-msg hidden"></small>
             <button type="submit" class="btn-primary" style="width:100%;margin-top:6px;">Save Event</button>
         </form>
+    </div>
+</div>
+
+<!-- Roster email preview (admin — exactly what the receiver will see) -->
+<div id="email-preview-modal" class="modal hidden">
+    <div class="modal-content email-preview-content">
+        <span class="close-btn" id="close-email-preview-modal">&times;</span>
+        <div class="panel-label">Roster Email Preview</div>
+        <div class="email-preview-meta">
+            <span id="email-preview-to" class="email-preview-chip"></span>
+            <span id="email-preview-subject" class="email-preview-chip"></span>
+        </div>
+        <iframe id="email-preview-frame" class="email-preview-frame" sandbox="" title="Roster email preview"></iframe>
+        <div class="email-preview-actions">
+            <button id="email-preview-copy" class="btn-secondary">Copy Email HTML</button>
+        </div>
     </div>
 </div>
 

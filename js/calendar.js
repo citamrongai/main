@@ -362,6 +362,7 @@ function renderRoster(ev) {
         renderCalendar();
       }
     };
+    $('preview-email-btn').onclick = () => openEmailPreview(ev);
     $('finalize-btn').onclick = () => finalizeAndEmail(ev);
     $('send-reminders-btn').onclick = () => sendReminders(ev, false);
     $('copy-roster-btn').onclick = () => {
@@ -512,11 +513,12 @@ function populateServiceOptions(ev) {
   err.classList.add('hidden');
   svcSelect.innerHTML = '<option value="">— Select service —</option>';
 
-  if (!roleKey) { svcWrap.classList.add('hidden'); svcNote.classList.add('hidden'); return; }
+  if (!roleKey) { svcWrap.classList.add('hidden'); svcNote.classList.add('hidden'); svcSelect.disabled = true; return; }
 
   if (cfg.type === 'split') {
     svcWrap.classList.remove('hidden');
     svcNote.classList.add('hidden');
+    svcSelect.disabled = false; // active — required service choice applies
     cfg.services.forEach(service => {
       const open = isSlotOpen(ev, roleKey, service);
       const opt = document.createElement('option');
@@ -526,9 +528,12 @@ function populateServiceOptions(ev) {
       svcSelect.appendChild(opt);
     });
   } else {
-    // 'both' & 'both_multiple' — the single available option covers both services
+    // 'both' & 'both_multiple' — the single available option covers both services.
+    // Disable the select so its empty `required` state can't silently block the
+    // form's native validation (CSS-hidden fields still participate in it).
     svcWrap.classList.add('hidden');
     svcNote.classList.remove('hidden');
+    svcSelect.disabled = true;
     svcNote.textContent = cfg.type === 'both_multiple'
       ? `Covers BOTH services — ${cfg.max - ev.roster[roleKey].both.length} of ${cfg.max} member slot(s) still open.`
       : 'This role covers BOTH services (1st & 2nd) with a single volunteer.';
@@ -816,6 +821,8 @@ function initCalendar() {
     if (e.key === 'Escape') {
       els.userModal.classList.add('hidden');
       els.eventModal.classList.add('hidden');
+      const ep = $('email-preview-modal');
+      if (ep) ep.classList.add('hidden');
     }
   });
 

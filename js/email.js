@@ -25,14 +25,11 @@
    ------------------------------------------------------ */
 const ROSTER_EMAIL       = "emmanuellalampaaa@gmail.com";
 const EMAILJS_PUBLIC_KEY = "ieSV0jy_necloh4kq";    // e.g. "AbCdEf123"
-const EMAILJS_SERVICE_ID = "service_apeheyq";    // e.g. "service_abc123"
-const EMAILJS_TEMPLATE_ID = "template_77mnbi9";  // e.g. "template_xyz789"
+const EMAILJS_SERVICE_ID = "";    // e.g. "service_abc123"
+const EMAILJS_TEMPLATE_ID = "";  // e.g. "template_xyz789"
 
-/* Brand logo used inside the HTML emails. Email clients cannot load
-   local files, so host The_Crew_Logo.jpeg somewhere public (your
-   church site, a CDN, or a raw GitHub link) and paste the https URL
-   here. Until then, the app uses the local The_Crew_Logo.jpeg file,
-   which renders wherever the site files are served from. */
+/* Brand logo used inside the HTML emails. Hosted on ibb.co so email
+   clients (which cannot load local files) can render it. */
 const CREW_LOGO_URL = "https://i.ibb.co/BH1Ln5Z5/the-crew-logo.jpeg"; // e.g. "https://example.com/images/the-crew-logo.jpeg"
 
 const REMINDER_DAYS_BEFORE = 1; // reminder emails go out 1 day before the service
@@ -121,11 +118,11 @@ function buildReminderText(ev, rec) {
    don't render HTML in mailto: bodies).
    ===================================================== */
 function emailLogo() {
-  // Prefer the public logo URL when configured; otherwise point at the
-  // local The_Crew_Logo.jpeg shipped with the app.
+  // Use the public ibb.co logo URL; fall back to it even if the
+  // CREW_LOGO_URL placeholder is ever reset.
   const src = (CREW_LOGO_URL && !CREW_LOGO_URL.startsWith('YOUR_'))
     ? CREW_LOGO_URL
-    : 'The_Crew_Logo.jpeg';
+    : 'https://i.ibb.co/BH1Ln5Z5/the-crew-logo.jpeg';
   return `<img src="${escapeHtml(src)}" alt="The Crew" width="84" height="84" style="display:block;margin:0 auto;border-radius:6px;" />`;
 }
 
@@ -322,3 +319,37 @@ function openMailtoFallback(subject, bodyText) {
   const url = `mailto:${ROSTER_EMAIL}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(bodyText)}`;
   window.open(url, '_blank');
 }
+
+/* =====================================================
+   In-app email preview (admin)
+   Renders buildRosterHTML() in a modal iframe so the
+   sender sees exactly what the receiver will get.
+   ===================================================== */
+function openEmailPreview(ev) {
+  const frame  = document.getElementById('email-preview-frame');
+  const toEl   = document.getElementById('email-preview-to');
+  const subEl  = document.getElementById('email-preview-subject');
+  if (frame) frame.srcdoc = buildRosterHTML(ev);
+  if (toEl)   toEl.textContent = 'To: ' + ROSTER_EMAIL;
+  if (subEl)  subEl.textContent = 'Subject: ' + (ev.finalized ? 'Finalized Worship Roster' : 'Worship Roster') + ' — ' + formatDateLong(ev.date);
+  const modal = document.getElementById('email-preview-modal');
+  if (modal) modal.classList.remove('hidden');
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  const close = document.getElementById('close-email-preview-modal');
+  if (close) close.addEventListener('click', () => {
+    document.getElementById('email-preview-modal').classList.add('hidden');
+  });
+
+  const copy = document.getElementById('email-preview-copy');
+  if (copy) copy.addEventListener('click', () => {
+    const frame = document.getElementById('email-preview-frame');
+    const html = frame ? frame.srcdoc : '';
+    if (!html) { showToast('Nothing to copy yet'); return; }
+    if (!navigator.clipboard) { showToast('Clipboard not available — copy from the preview instead'); return; }
+    navigator.clipboard.writeText(html)
+      .then(() => showToast('Email HTML copied — paste it into your email client'))
+      .catch(() => showToast('Could not copy'));
+  });
+});
